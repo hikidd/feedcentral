@@ -32,7 +32,7 @@ export function TopNav({ onSearchClick }: TopNavProps) {
               <circle cx="5" cy="19" r="1"></circle>
             </svg>
           </div>
-          <span className="text-lg font-semibold tracking-tight">FeedCentral</span>
+          <span className="text-lg font-semibold tracking-tight">观流｜FlowLink</span>
         </Link>
 
         {/* Center - Search Bar */}

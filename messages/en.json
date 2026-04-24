@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "FeedCentral - Centralized News Aggregator",
+    "title": "观流｜FlowLink",
     "description": "A professional RSS feed aggregator built with Next.js, offering a clean, Vercel-like interface to centralize and verify your news sources."
   },
   "navigation": {

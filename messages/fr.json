@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "FeedCentral - Agrégateur d'Actualités",
+    "title": "观流｜FlowLink",
     "description": "Un agrégateur de flux RSS professionnel créé avec Next.js, avec une interface simple et claire pour regrouper et vérifier vos sources d'information."
   },
   "navigation": {
