@@ -1,6 +1,8 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only-1234567890';
+
 // Silence noisy console.error output during tests by default.
 // Tests can still assert console.error calls by spying/restoring locally.
 beforeAll(() => {

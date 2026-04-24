@@ -513,11 +513,15 @@ export async function fetchSingleSource(sourceId: string) {
   });
 
   if (!source) {
-    throw new Error(`Source ${sourceId} not found`);
+    const error = new Error(`Source ${sourceId} not found`) as Error & { code?: string };
+    error.code = 'SOURCE_NOT_FOUND';
+    throw error;
   }
 
   if (!source.isActive) {
-    throw new Error(`Source ${source.name} is not active`);
+    const error = new Error(`Source ${source.name} is not active`) as Error & { code?: string };
+    error.code = 'SOURCE_INACTIVE';
+    throw error;
   }
 
   return await fetchAndStoreArticles(source);

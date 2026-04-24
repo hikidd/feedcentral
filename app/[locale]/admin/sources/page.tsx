@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AddSourceDialog } from '@/components/admin/AddSourceDialog';
 import { toast } from '@/lib/hooks/useToast';
-import { Plus, Search, Globe, Power, PowerOff } from 'lucide-react';
+import { Plus, Search, Globe, Power, PowerOff, RefreshCw } from 'lucide-react';
 
 interface Source {
   id: string;
@@ -32,6 +32,7 @@ export default function AdminSourcesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [fetchingSourceIds, setFetchingSourceIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -92,6 +93,38 @@ export default function AdminSourcesPage() {
     }
   }
 
+  async function fetchSourceNow(id: string) {
+    setFetchingSourceIds((current) => [...current, id]);
+
+    try {
+      const response = await fetch(`/api/admin/sources/${id}/fetch`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Failed to fetch source');
+      }
+
+      toast({
+        title: 'Success',
+        description: `Fetch completed: ${data.data.added} new of ${data.data.found} found`,
+        variant: 'success',
+      });
+
+      await fetchSources();
+    } catch (error: any) {
+      console.error('Failed to fetch source:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to fetch source',
+        variant: 'destructive',
+      });
+    } finally {
+      setFetchingSourceIds((current) => current.filter((sourceId) => sourceId !== id));
+    }
+  }
+
   const filteredSources = sources.filter(source =>
     source.name.toLowerCase().includes(search.toLowerCase()) ||
     source.url.toLowerCase().includes(search.toLowerCase())
@@ -145,7 +178,10 @@ export default function AdminSourcesPage() {
 
         {/* Sources List */}
         <div className="space-y-3">
-          {filteredSources.map((source) => (
+          {filteredSources.map((source) => {
+            const isFetching = fetchingSourceIds.includes(source.id);
+
+            return (
             <div
               key={source.id}
               className="flex items-center justify-between rounded-lg border border-border bg-card p-5 hover:shadow-md transition-all"
@@ -186,6 +222,16 @@ export default function AdminSourcesPage() {
 
               <div className="flex items-center gap-2 ml-4">
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchSourceNow(source.id)}
+                  className="gap-2"
+                  disabled={isFetching || !source.isActive}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+                  {isFetching ? 'Fetching...' : 'Fetch now'}
+                </Button>
+                <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleSource(source.id, source.isActive)}
@@ -205,7 +251,8 @@ export default function AdminSourcesPage() {
                 </Button>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {filteredSources.length === 0 && (
             <div className="text-center py-16 text-muted-foreground">

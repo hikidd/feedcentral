@@ -14,6 +14,8 @@ export function createMockRequest(
     method?: string;
     body?: any;
     userId?: string;
+    role?: 'ADMIN' | 'USER';
+    email?: string;
     cookies?: Record<string, string>;
     searchParams?: Record<string, string>;
   } = {}
@@ -22,6 +24,8 @@ export function createMockRequest(
     method = 'GET',
     body,
     userId,
+    role = 'USER',
+    email = 'test@example.com',
     cookies = {},
     searchParams = {},
   } = options;
@@ -34,7 +38,7 @@ export function createMockRequest(
 
   // Create auth token if userId provided
   if (userId) {
-    const token = jwt.sign({ userId }, getTestJwtSecret(), { expiresIn: '7d' });
+    const token = jwt.sign({ userId, role, email }, getTestJwtSecret(), { expiresIn: '7d' });
     cookies['auth_token'] = token; // Note: cookie name is auth_token not auth-token
   }
 
