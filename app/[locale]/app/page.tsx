@@ -7,15 +7,12 @@ import { AppTabs } from '@/components/layout/AppTabs';
 import { FeedList } from '@/components/feed/FeedList';
 import { FeedSkeleton } from '@/components/feed/FeedSkeleton';
 import { EmptyState } from '@/components/feed/EmptyState';
-import { AccountBenefitsBanner } from '@/components/feed/AccountBenefitsBanner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { Article, Category } from '@/types';
 
 export default function AppDashboard() {
   const t = useTranslations();
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -161,9 +158,6 @@ export default function AppDashboard() {
           </p>
         </div>
 
-        {/* Account Benefits Banner (only for non-authenticated users) */}
-        {!user && <AccountBenefitsBanner />}
-        
         <div>
 
 

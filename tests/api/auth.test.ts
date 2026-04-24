@@ -6,6 +6,7 @@
 import { POST as loginPost } from '@/app/api/auth/login/route';
 import { POST as logoutPost } from '@/app/api/auth/logout/route';
 import { GET as meGet } from '@/app/api/auth/me/route';
+import { POST as registerPost } from '@/app/api/auth/register/route';
 import { createMockRequest, getResponseData } from '../helpers/test-utils';
 import { resetAllMocks } from '../helpers/prisma-mock';
 import bcrypt from 'bcryptjs';
@@ -22,6 +23,10 @@ jest.mock('@/lib/prisma', () => {
 const { mockPrisma } = require('./../../tests/helpers/prisma-mock');
 
 jest.mock('bcryptjs');
+
+beforeAll(() => {
+  process.env.JWT_SECRET = 'test-secret-key-for-testing-only-1234567890';
+});
 
 describe('POST /api/auth/login', () => {
   beforeEach(() => {
@@ -131,6 +136,27 @@ describe('POST /api/auth/logout', () => {
     expect(data.success).toBe(true);
     expect(response.headers.get('set-cookie')).toContain('auth_token=;');
     expect(response.headers.get('set-cookie')).toContain('Max-Age=0');
+  });
+});
+
+describe('POST /api/auth/register', () => {
+  it('should reject public self-registration', async () => {
+    const request = createMockRequest('http://localhost:3000/api/auth/register', {
+      method: 'POST',
+      body: {
+        email: 'new@example.com',
+        name: 'New User',
+        password: 'password123',
+      },
+    });
+
+    const response = await registerPost(request);
+    const { status, data } = await getResponseData(response);
+
+    expect(status).toBe(403);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Registration is disabled');
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
   });
 });
 

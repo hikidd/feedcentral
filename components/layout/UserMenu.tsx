@@ -31,13 +31,7 @@ export function UserMenu() {
   }, [isOpen]);
 
   if (!user) {
-    return (
-      <Link href="/login">
-        <Button variant="ghost" size="sm">
-          {t('auth.signIn')}
-        </Button>
-      </Link>
-    );
+    return null;
   }
 
   return (

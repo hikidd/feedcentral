@@ -1,6 +1,6 @@
 /**
  * Tests for /api/articles
- * Main feed endpoint that returns articles with pagination and filtering
+ * Main public feed endpoint that returns articles with pagination and filtering
  */
 
 import { GET } from '@/app/api/articles/route';
@@ -101,90 +101,37 @@ describe('GET /api/articles', () => {
     });
   });
 
-  describe('Authenticated User', () => {
-    const mockUserId = 'user123';
-
-    it('should merge custom and default articles for authenticated users', async () => {
-      // Mock user sources and preferences
-      (mockPrisma.userSource.findMany as jest.Mock).mockResolvedValue([
-        { id: 'us1', categoryId: 'c1' },
-      ]);
-      (mockPrisma.userSourcePreference.findMany as jest.Mock).mockResolvedValue([
-        { sourceId: 's2' }, // disabled source
-      ]);
-
-      // Mock article counts
-      (mockPrisma.article.count as jest.Mock).mockResolvedValue(5);
-      (mockPrisma.userArticle.count as jest.Mock).mockResolvedValue(3);
-
-      // Mock articles
-      const mockDefaultArticles = [
+  describe('Authenticated Requests', () => {
+    it('should return the same public feed for authenticated requests', async () => {
+      const mockArticles = [
         {
           id: '1',
           title: 'Default Article',
+          description: 'Description 1',
+          url: 'https://example.com/1',
           publishedAt: new Date('2025-01-02'),
-          source: { id: 's1', name: 'Default Source' },
-          category: { id: 'c1', name: 'Tech' },
+          source: { id: 's1', name: 'Default Source', url: 'https://example.com', logoUrl: null },
+          category: { id: 'c1', name: 'Tech', slug: 'tech', color: '#000', icon: 'cpu' },
         },
       ];
 
-      const mockUserArticles = [
-        {
-          id: '2',
-          title: 'Custom Article',
-          publishedAt: new Date('2025-01-03'),
-          userSource: {
-            id: 'us1',
-            customName: 'My Feed',
-            feedTitle: 'Custom Feed',
-            categoryId: 'c1',
-            category: { id: 'c1', name: 'Tech', slug: 'tech' },
-          },
-        },
-      ];
-
-      (mockPrisma.article.findMany as jest.Mock).mockResolvedValue(mockDefaultArticles);
-      (mockPrisma.userArticle.findMany as jest.Mock).mockResolvedValue(mockUserArticles);
+      (mockPrisma.article.count as jest.Mock).mockResolvedValue(1);
+      (mockPrisma.article.findMany as jest.Mock).mockResolvedValue(mockArticles);
 
       const request = createMockRequest('http://localhost:3000/api/articles', {
-        userId: mockUserId,
+        userId: 'user123',
       });
       const response = await GET(request);
       const { status, data } = await getResponseData(response);
 
       expect(status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.pagination.total).toBe(8); // 5 + 3
-
-      // Verify disabled sources are excluded
-      expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            sourceId: { notIn: ['s2'] },
-          }),
-        })
-      );
-    });
-
-    it('should filter custom articles by category', async () => {
-      (mockPrisma.userSource.findMany as jest.Mock).mockResolvedValue([{ id: 'us1', categoryId: 'c1' }]);
-      (mockPrisma.userSourcePreference.findMany as jest.Mock).mockResolvedValue([]);
-      (mockPrisma.category.findUnique as jest.Mock).mockResolvedValue({ id: 'c1' });
-      (mockPrisma.article.count as jest.Mock).mockResolvedValue(0);
-      (mockPrisma.userArticle.count as jest.Mock).mockResolvedValue(0);
-      (mockPrisma.article.findMany as jest.Mock).mockResolvedValue([]);
-      (mockPrisma.userArticle.findMany as jest.Mock).mockResolvedValue([]);
-
-      const request = createMockRequest('http://localhost:3000/api/articles', {
-        userId: mockUserId,
-        searchParams: { category: 'tech' },
-      });
-      const response = await GET(request);
-
-      expect(mockPrisma.category.findUnique).toHaveBeenCalledWith({
-        where: { slug: 'tech' },
-        select: { id: true },
-      });
+      expect(data.data).toHaveLength(1);
+      expect(data.data[0].title).toBe('Default Article');
+      expect(mockPrisma.userSource.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.userSourcePreference.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.userArticle.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.userArticle.count).not.toHaveBeenCalled();
     });
   });
 

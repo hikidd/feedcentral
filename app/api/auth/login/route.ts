@@ -105,7 +105,6 @@ export async function POST(request: NextRequest) {
           role: user.role,
           avatar: user.avatar,
         },
-        token,
       },
     });
 
@@ -125,7 +124,6 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: 'Authentication failed',
-        message: error.message,
       },
       { status: 500 }
     );

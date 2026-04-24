@@ -3,14 +3,17 @@ const path = require('path');
 
 // Ensure Prisma query engine binary is in the correct location for Vercel
 const prismaClientPath = path.join(__dirname, '..', 'node_modules', '.prisma', 'client');
-const prismaEngineGlob = 'libquery_engine-*.node';
+const prismaEnginePatterns = [
+  /^libquery_engine-.*\.node$/,
+  /^query_engine-.*\.node$/,
+];
 
 console.log('🔍 Checking Prisma query engine binaries...');
 console.log('📂 Prisma client path:', prismaClientPath);
 
 if (fs.existsSync(prismaClientPath)) {
   const files = fs.readdirSync(prismaClientPath);
-  const engineFiles = files.filter(f => f.startsWith('libquery_engine-') && f.endsWith('.node'));
+  const engineFiles = files.filter((file) => prismaEnginePatterns.some((pattern) => pattern.test(file)));
   
   console.log('✅ Found Prisma query engine binaries:', engineFiles);
   

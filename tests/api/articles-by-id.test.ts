@@ -1,6 +1,6 @@
 /**
  * Tests for /api/articles/[id]
- * Single article endpoint supporting both default and custom articles
+ * Single public article endpoint
  */
 
 import { GET } from '@/app/api/articles/[id]/route';
@@ -47,45 +47,21 @@ describe('GET /api/articles/[id]', () => {
     expect(data.data.source.name).toBe('Test Source');
   });
 
-  it('should return a custom article if not found in default articles', async () => {
-    const mockUserArticle = {
-      id: 'user-article1',
-      title: 'Custom Article',
-      excerpt: 'Custom excerpt',
-      url: 'https://custom.com/article',
-      publishedAt: new Date('2025-01-01'),
-      userSourceId: 'us1',
-      userSource: {
-        id: 'us1',
-        customName: 'My Custom Feed',
-        feedTitle: 'Custom Feed',
-        siteUrl: 'https://custom.com',
-        logoUrl: null,
-        categoryId: 'c1',
-        category: { id: 'c1', name: 'Tech', slug: 'tech', color: '#000', icon: 'cpu' },
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: null,
-    };
-
+  it('should return 404 when the article is not a public article', async () => {
     (mockPrisma.article.findFirst as jest.Mock).mockResolvedValue(null);
-    (mockPrisma.userArticle.findFirst as jest.Mock).mockResolvedValue(mockUserArticle);
 
     const request = createMockRequest('http://localhost:3000/api/articles/user-article1');
     const response = await GET(request, { params: createMockParams({ id: 'user-article1' }) });
     const { status, data } = await getResponseData(response);
 
-    expect(status).toBe(200);
-    expect(data.success).toBe(true);
-    expect(data.data.title).toBe('Custom Article');
-    expect(data.data.source.name).toBe('My Custom Feed');
-    expect(data.data.description).toBe('Custom excerpt');
+    expect(status).toBe(404);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Article not found');
+    expect(mockPrisma.userArticle.findFirst).not.toHaveBeenCalled();
   });
 
-  it('should return 404 if article not found in both tables', async () => {
+  it('should return 404 if public article is not found', async () => {
     (mockPrisma.article.findFirst as jest.Mock).mockResolvedValue(null);
-    (mockPrisma.userArticle.findFirst as jest.Mock).mockResolvedValue(null);
 
     const request = createMockRequest('http://localhost:3000/api/articles/nonexistent');
     const response = await GET(request, { params: createMockParams({ id: 'nonexistent' }) });

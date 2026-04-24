@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only';
+function getTestJwtSecret() {
+  return process.env.JWT_SECRET || 'test-secret-key-for-testing-only-1234567890';
+}
 
 /**
  * Create a mock NextRequest with optional authentication
@@ -32,7 +34,7 @@ export function createMockRequest(
 
   // Create auth token if userId provided
   if (userId) {
-    const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId }, getTestJwtSecret(), { expiresIn: '7d' });
     cookies['auth_token'] = token; // Note: cookie name is auth_token not auth-token
   }
 

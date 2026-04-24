@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { TopNav } from '@/components/layout/TopNav';
-import { SideNav } from '@/components/layout/SideNav';
 import { CommandSearch } from '@/components/search/CommandSearch';
 
 export default function AppLayout({
@@ -28,9 +27,8 @@ export default function AppLayout({
   return (
     <>
       <TopNav onSearchClick={() => setIsSearchOpen(true)} />
-      <SideNav />
-      
-      <main className="md:pl-16 lg:pl-20 pt-16" style={{ width: '100%' }}>
+
+      <main className="pt-16" style={{ width: '100%' }}>
         {children}
       </main>
 
