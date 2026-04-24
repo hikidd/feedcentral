@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,11 +37,11 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
   const [loadingCategories, setLoadingCategories] = useState(false);
 
   // Fetch categories when dialog opens
-  useState(() => {
+  useEffect(() => {
     if (open) {
       fetchCategories();
     }
-  });
+  }, [open]);
 
   async function fetchCategories() {
     setLoadingCategories(true);
