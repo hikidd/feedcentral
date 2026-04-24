@@ -6,8 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AddSourceDialog } from '@/components/admin/AddSourceDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from '@/lib/hooks/useToast';
-import { Plus, Search, Globe, Power, PowerOff, RefreshCw } from 'lucide-react';
+import { Plus, Search, Globe, Power, PowerOff, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 
 interface Source {
   id: string;
@@ -33,6 +41,8 @@ export default function AdminSourcesPage() {
   const [search, setSearch] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [fetchingSourceIds, setFetchingSourceIds] = useState<string[]>([]);
+  const [deletingSource, setDeletingSource] = useState<Source | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -40,21 +50,25 @@ export default function AdminSourcesPage() {
     }
   }, [user]);
 
-  async function fetchSources() {
+  async function fetchSources(options?: { skipMinimumDelay?: boolean }) {
+    const shouldEnforceMinimumDelay = !options?.skipMinimumDelay;
+
     try {
       const startTime = Date.now();
       const response = await fetch('/api/admin/sources');
       const data = await response.json();
-      
+
       if (data.success) {
         setSources(data.data);
       }
 
-      // Ensure minimum loading time of 1 second for smoother UX
-      const elapsed = Date.now() - startTime;
-      const minLoadTime = 1000;
-      if (elapsed < minLoadTime) {
-        await new Promise(resolve => setTimeout(resolve, minLoadTime - elapsed));
+      if (shouldEnforceMinimumDelay) {
+        // Ensure minimum loading time of 1 second for smoother UX
+        const elapsed = Date.now() - startTime;
+        const minLoadTime = 1000;
+        if (elapsed < minLoadTime) {
+          await new Promise(resolve => setTimeout(resolve, minLoadTime - elapsed));
+        }
       }
     } catch (error) {
       console.error('Failed to fetch sources:', error);
@@ -125,6 +139,44 @@ export default function AdminSourcesPage() {
     }
   }
 
+  async function confirmDeleteSource() {
+    if (!deletingSource) {
+      return;
+    }
+
+    const sourceToDelete = deletingSource;
+
+    try {
+      setDeleting(true);
+      const response = await fetch(`/api/admin/sources/${sourceToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Failed to delete source');
+      }
+
+      setSources((current) => current.filter((source) => source.id !== sourceToDelete.id));
+      setDeletingSource(null);
+      toast({
+        title: 'Success',
+        description: data.message || 'Source deleted successfully',
+        variant: 'success',
+      });
+      void fetchSources({ skipMinimumDelay: true });
+    } catch (error: any) {
+      console.error('Failed to delete source:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete source',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const filteredSources = sources.filter(source =>
     source.name.toLowerCase().includes(search.toLowerCase()) ||
     source.url.toLowerCase().includes(search.toLowerCase())
@@ -150,6 +202,61 @@ export default function AdminSourcesPage() {
           onOpenChange={setShowAddDialog}
           onSuccess={fetchSources}
         />
+
+        <Dialog
+          open={deletingSource !== null}
+          onOpenChange={(open) => {
+            if (!open && !deleting) {
+              setDeletingSource(null);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-destructive/10 p-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                </div>
+                <DialogTitle>Delete source</DialogTitle>
+              </div>
+              <DialogDescription className="pt-4">
+                This will permanently delete the source and stop future fetches for it.
+              </DialogDescription>
+            </DialogHeader>
+
+            {deletingSource && (
+              <div className="py-4">
+                <div className="rounded-lg border border-border bg-muted p-4">
+                  <p className="mb-1 font-medium">{deletingSource.name}</p>
+                  <p className="text-sm text-muted-foreground break-all">{deletingSource.url}</p>
+                </div>
+
+                <p className="mt-4 text-sm font-medium text-destructive">
+                  This action cannot be undone.
+                </p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeletingSource(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteSource}
+                disabled={deleting}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deleting ? 'Deleting...' : 'Delete source'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -220,13 +327,13 @@ export default function AdminSourcesPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 ml-4">
+              <div className="ml-4 flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => fetchSourceNow(source.id)}
                   className="gap-2"
-                  disabled={isFetching || !source.isActive}
+                  disabled={isFetching || !source.isActive || deleting}
                 >
                   <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
                   {isFetching ? 'Fetching...' : 'Fetch now'}
@@ -236,6 +343,7 @@ export default function AdminSourcesPage() {
                   size="sm"
                   onClick={() => toggleSource(source.id, source.isActive)}
                   className="gap-2"
+                  disabled={deleting}
                 >
                   {source.isActive ? (
                     <>
@@ -248,6 +356,16 @@ export default function AdminSourcesPage() {
                       Activate
                     </>
                   )}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeletingSource(source)}
+                  className="gap-2"
+                  disabled={deleting}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
                 </Button>
               </div>
             </div>

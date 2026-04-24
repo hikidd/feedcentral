@@ -149,7 +149,6 @@ export async function DELETE(
         {
           success: false,
           error: 'Failed to delete source',
-          message: error.message,
         },
         { status: 500 }
       );

@@ -52,6 +52,7 @@ export const mockPrisma = {
     findMany: jest.fn(),
     findFirst: jest.fn(),
     count: jest.fn(),
+    delete: jest.fn(),
   },
   user: {
     findUnique: jest.fn(),
