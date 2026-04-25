@@ -50,22 +50,22 @@ export function DeleteSourceDialog({
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: data.message || 'Source deleted successfully',
+          title: t('common.success'),
+          description: data.message || t('sources.mySources.deleteDialog.success'),
         });
         onOpenChange(false);
         onSuccess();
       } else {
         toast({
-          title: 'Error',
-          description: data.error || 'Failed to delete source',
+          title: t('common.error'),
+          description: data.error || t('sources.mySources.deleteDialog.error'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Network error, please try again',
+        title: t('common.error'),
+        description: t('sources.mySources.addDialog.errors.network'),
         variant: 'destructive',
       });
     } finally {

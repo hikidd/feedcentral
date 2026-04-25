@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { changelog, type ChangelogEntry } from '@/lib/changelog-data';
 import { markChangelogAsSeen } from '@/components/changelog/ChangelogNotification';
 import { useTranslations, useLocale } from 'next-intl';
+import { getIntlLocale } from '@/lib/locale';
 
 const getUpdateTypeBadge = (type: 'major' | 'minor' | 'patch', t: any) => {
   const styles = {
@@ -81,7 +82,7 @@ export default function ChangelogPage() {
   // Format date based on locale
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
+    return date.toLocaleDateString(getIntlLocale(locale), {
       year: 'numeric',
       month: 'long',
       day: 'numeric'

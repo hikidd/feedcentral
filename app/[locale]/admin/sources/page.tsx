@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRequireAdmin } from '@/lib/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/lib/hooks/useToast';
+import { getIntlLocale } from '@/lib/locale';
 import { Plus, Search, Globe, Power, PowerOff, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 
 interface Source {
@@ -35,6 +37,8 @@ interface Source {
 }
 
 export default function AdminSourcesPage() {
+  const t = useTranslations();
+  const locale = useLocale();
   const { user, isLoading: authLoading } = useRequireAdmin();
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,18 +94,18 @@ export default function AdminSourcesPage() {
       if (response.ok) {
         fetchSources();
         toast({
-          title: 'Success',
-          description: `Source ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+          title: t('common.success'),
+          description: !currentStatus ? t('admin.sourcesPage.toggleSuccessActivated') : t('admin.sourcesPage.toggleSuccessDeactivated'),
           variant: 'success',
         });
       } else {
-        throw new Error('Failed to toggle source');
+        throw new Error(t('admin.sourcesPage.toggleFailed'));
       }
     } catch (error) {
       console.error('Failed to toggle source:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update source status',
+        title: t('common.error'),
+        description: t('admin.sourcesPage.toggleFailed'),
         variant: 'destructive',
       });
     }
@@ -117,12 +121,12 @@ export default function AdminSourcesPage() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || data.error || 'Failed to fetch source');
+        throw new Error(data.message || data.error || t('admin.sourcesPage.fetchFailed'));
       }
 
       toast({
-        title: 'Success',
-        description: `Fetch completed: ${data.data.added} new of ${data.data.found} found`,
+        title: t('common.success'),
+        description: t('admin.sourcesPage.fetchSuccess', { added: data.data.added, found: data.data.found }),
         variant: 'success',
       });
 
@@ -130,8 +134,8 @@ export default function AdminSourcesPage() {
     } catch (error: any) {
       console.error('Failed to fetch source:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to fetch source',
+        title: t('common.error'),
+        description: error.message || t('admin.sourcesPage.fetchFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -154,22 +158,22 @@ export default function AdminSourcesPage() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || data.error || 'Failed to delete source');
+        throw new Error(data.message || data.error || t('admin.sourcesPage.deleteFailed'));
       }
 
       setSources((current) => current.filter((source) => source.id !== sourceToDelete.id));
       setDeletingSource(null);
       toast({
-        title: 'Success',
-        description: data.message || 'Source deleted successfully',
+        title: t('common.success'),
+        description: data.message || t('admin.sourcesPage.deleteSuccess'),
         variant: 'success',
       });
       void fetchSources({ skipMinimumDelay: true });
     } catch (error: any) {
       console.error('Failed to delete source:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete source',
+        title: t('common.error'),
+        description: error.message || t('admin.sourcesPage.deleteFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -185,7 +189,7 @@ export default function AdminSourcesPage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-neutral-400">Loading sources...</div>
+        <div className="text-neutral-400">{t('admin.sourcesPage.loading')}</div>
       </div>
     );
   }
@@ -217,10 +221,10 @@ export default function AdminSourcesPage() {
                 <div className="rounded-full bg-destructive/10 p-2">
                   <AlertTriangle className="h-5 w-5 text-destructive" />
                 </div>
-                <DialogTitle>Delete source</DialogTitle>
+                <DialogTitle>{t('admin.sourcesPage.deleteDialog.title')}</DialogTitle>
               </div>
               <DialogDescription className="pt-4">
-                This will permanently delete the source and stop future fetches for it.
+                {t('admin.sourcesPage.deleteDialog.description')}
               </DialogDescription>
             </DialogHeader>
 
@@ -232,7 +236,7 @@ export default function AdminSourcesPage() {
                 </div>
 
                 <p className="mt-4 text-sm font-medium text-destructive">
-                  This action cannot be undone.
+                  {t('admin.sourcesPage.deleteDialog.warning')}
                 </p>
               </div>
             )}
@@ -243,7 +247,7 @@ export default function AdminSourcesPage() {
                 onClick={() => setDeletingSource(null)}
                 disabled={deleting}
               >
-                Cancel
+                {t('admin.sourcesPage.deleteDialog.cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -252,7 +256,7 @@ export default function AdminSourcesPage() {
                 className="gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                {deleting ? 'Deleting...' : 'Delete source'}
+                {deleting ? t('admin.sourcesPage.deleteDialog.deleting') : t('admin.sourcesPage.deleteDialog.confirm')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -261,14 +265,14 @@ export default function AdminSourcesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">RSS Sources</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('admin.sourcesPage.title')}</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Manage RSS feed sources and monitoring
+              {t('admin.sourcesPage.subtitle')}
             </p>
           </div>
           <Button onClick={() => setShowAddDialog(true)} className="gap-2">
             <Plus className="w-4 h-4" />
-            Add Source
+            {t('admin.sourcesPage.addSource')}
           </Button>
         </div>
 
@@ -276,7 +280,7 @@ export default function AdminSourcesPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search sources..."
+            placeholder={t('admin.sourcesPage.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -300,7 +304,7 @@ export default function AdminSourcesPage() {
                     variant={source.isActive ? 'default' : 'secondary'}
                     className="text-xs"
                   >
-                    {source.isActive ? 'Active' : 'Inactive'}
+                    {source.isActive ? t('admin.sourcesPage.active') : t('admin.sourcesPage.inactive')}
                   </Badge>
                   <Badge
                     style={{
@@ -318,10 +322,10 @@ export default function AdminSourcesPage() {
                     <Globe className="w-3.5 h-3.5" />
                     <span className="truncate max-w-md">{source.url}</span>
                   </span>
-                  <span className="font-medium">{source._count.articles} articles</span>
+                  <span className="font-medium">{t('admin.sourcesPage.articlesCount', { count: source._count.articles })}</span>
                   {source.lastFetchedAt && (
                     <span>
-                      Last fetched: {new Date(source.lastFetchedAt).toLocaleDateString()}
+                      {t('admin.sourcesPage.lastFetched', { date: new Date(source.lastFetchedAt).toLocaleDateString(getIntlLocale(locale)) })}
                     </span>
                   )}
                 </div>
@@ -336,7 +340,7 @@ export default function AdminSourcesPage() {
                   disabled={isFetching || !source.isActive || deleting}
                 >
                   <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-                  {isFetching ? 'Fetching...' : 'Fetch now'}
+                  {isFetching ? t('admin.sourcesPage.fetching') : t('admin.sourcesPage.fetchNow')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -348,12 +352,12 @@ export default function AdminSourcesPage() {
                   {source.isActive ? (
                     <>
                       <PowerOff className="w-4 h-4" />
-                      Deactivate
+                      {t('admin.sourcesPage.deactivate')}
                     </>
                   ) : (
                     <>
                       <Power className="w-4 h-4" />
-                      Activate
+                      {t('admin.sourcesPage.activate')}
                     </>
                   )}
                 </Button>
@@ -365,7 +369,7 @@ export default function AdminSourcesPage() {
                   disabled={deleting}
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  {t('admin.sourcesPage.delete')}
                 </Button>
               </div>
             </div>
@@ -374,9 +378,9 @@ export default function AdminSourcesPage() {
 
           {filteredSources.length === 0 && (
             <div className="text-center py-16 text-muted-foreground">
-              <p className="text-lg">No sources found</p>
+              <p className="text-lg">{t('admin.sourcesPage.noSourcesFound')}</p>
               <p className="text-sm mt-1">
-                {search ? 'Try adjusting your search' : 'Add your first RSS source to get started'}
+                {search ? t('admin.sourcesPage.adjustSearch') : t('admin.sourcesPage.emptyCta')}
               </p>
             </div>
           )}

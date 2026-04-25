@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { getIntlLocale } from '@/lib/locale';
 import { Calendar, ExternalLink, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Link } from '@/i18n-navigation';
 import { useRouter } from '@/i18n-navigation';
@@ -17,10 +19,12 @@ interface ArticleHeaderProps {
 export function ArticleHeader({ article }: ArticleHeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('article');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
-  const formattedDate = new Date(article.publishedAt).toLocaleDateString('en-US', {
+  const formattedDate = new Date(article.publishedAt).toLocaleDateString(getIntlLocale(locale), {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -92,13 +96,15 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
       </h1>
 
       {article.author && (
-        <p className="mb-6 text-sm text-muted-foreground">by {decodeHtmlEntities(article.author)}</p>
+        <p className="mb-6 text-sm text-muted-foreground">
+          {t('by', { author: decodeHtmlEntities(article.author) })}
+        </p>
       )}
 
       <div className="flex gap-2">
         <Button asChild className="gap-2">
           <Link href={article.url} target="_blank" rel="noopener noreferrer">
-            Read on {article.source.name}
+            {t('readOn', { source: article.source.name })}
             <ExternalLink className="h-4 w-4" />
           </Link>
         </Button>
@@ -108,7 +114,7 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
           size="icon"
           onClick={toggleBookmark}
           disabled={bookmarkLoading}
-          title={user ? (isBookmarked ? 'Remove bookmark' : 'Add bookmark') : 'Sign in to bookmark'}
+          title={user ? (isBookmarked ? t('removeBookmark') : t('bookmark')) : t('signInToBookmark')}
         >
           {isBookmarked ? (
             <BookmarkCheck className="h-4 w-4" />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRequireAdmin } from '@/lib/hooks/useAuth';
 import { Users, Plus, Search, Shield, User as UserIcon, Mail, Calendar, Edit, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { getIntlLocale } from '@/lib/locale';
 
 interface User {
   id: string;
@@ -24,6 +26,8 @@ interface User {
 }
 
 export default function UsersPage() {
+  const t = useTranslations();
+  const locale = useLocale();
   const { user: currentUser, isLoading: authLoading } = useRequireAdmin();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,18 +110,18 @@ export default function UsersPage() {
         setIsDialogOpen(false);
         fetchUsers(); // Refresh the list
       } else {
-        alert(data.error || 'Failed to save user');
+        alert(data.error || t('admin.usersPage.saveFailed'));
       }
     } catch (error) {
       console.error('Failed to save user:', error);
-      alert('An error occurred');
+      alert(t('admin.usersPage.genericError'));
     } finally {
       setIsSaving(false);
     }
   }
 
   async function handleDeleteUser(userId: string) {
-    if (!confirm('Are you sure you want to delete this user?')) {
+    if (!confirm(t('admin.usersPage.deleteConfirm'))) {
       return;
     }
 
@@ -131,18 +135,18 @@ export default function UsersPage() {
       if (data.success) {
         fetchUsers(); // Refresh the list
       } else {
-        alert(data.error || 'Failed to delete user');
+        alert(data.error || t('admin.usersPage.deleteFailed'));
       }
     } catch (error) {
       console.error('Failed to delete user:', error);
-      alert('An error occurred');
+      alert(t('admin.usersPage.genericError'));
     }
   }
 
   if (authLoading || !currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('admin.usersPage.loading')}</div>
       </div>
     );
   }
@@ -160,15 +164,15 @@ export default function UsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                Users
+                {t('admin.usersPage.title')}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Manage user accounts and permissions
+                {t('admin.usersPage.subtitle')}
               </p>
             </div>
             <Button onClick={handleAddUser} className="gap-2">
               <Plus className="h-4 w-4" />
-              Add User
+              {t('admin.usersPage.addUser')}
             </Button>
           </div>
         </div>
@@ -179,7 +183,7 @@ export default function UsersPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search users by name or email..."
+              placeholder={t('admin.usersPage.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -195,7 +199,7 @@ export default function UsersPage() {
                 <Users className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Users</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('admin.usersPage.stats.totalUsers')}</p>
                 <p className="text-2xl font-bold text-foreground">{users.length}</p>
               </div>
             </div>
@@ -207,7 +211,7 @@ export default function UsersPage() {
                 <Shield className="h-5 w-5 text-purple-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Admins</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('admin.usersPage.stats.admins')}</p>
                 <p className="text-2xl font-bold text-foreground">
                   {users.filter(u => u.role === 'ADMIN').length}
                 </p>
@@ -221,7 +225,7 @@ export default function UsersPage() {
                 <UserIcon className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Regular Users</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('admin.usersPage.stats.regularUsers')}</p>
                 <p className="text-2xl font-bold text-foreground">
                   {users.filter(u => u.role === 'USER').length}
                 </p>
@@ -233,7 +237,7 @@ export default function UsersPage() {
         {/* Users Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">Loading users...</div>
+            <div className="text-muted-foreground">{t('admin.usersPage.loadingUsers')}</div>
           </div>
         ) : (
           <div className="rounded-lg border border-border bg-card">
@@ -242,19 +246,19 @@ export default function UsersPage() {
                 <thead className="border-b border-border bg-muted/50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      User
+                      {t('admin.usersPage.table.user')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Role
+                      {t('admin.usersPage.table.role')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Created
+                      {t('admin.usersPage.table.created')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Last Login
+                      {t('admin.usersPage.table.lastLogin')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Actions
+                      {t('admin.usersPage.table.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -262,7 +266,7 @@ export default function UsersPage() {
                   {filteredUsers.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-sm text-muted-foreground">
-                        No users found
+                        {t('admin.usersPage.noUsersFound')}
                       </td>
                     </tr>
                   ) : (
@@ -293,12 +297,12 @@ export default function UsersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {new Date(user.createdAt).toLocaleDateString(getIntlLocale(locale))}
                         </td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">
                           {user.lastLoginAt
-                            ? new Date(user.lastLoginAt).toLocaleDateString()
-                            : 'Never'}
+                            ? new Date(user.lastLoginAt).toLocaleDateString(getIntlLocale(locale))
+                            : t('admin.usersPage.never')}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -309,7 +313,7 @@ export default function UsersPage() {
                               className="gap-2"
                             >
                               <Edit className="h-3 w-3" />
-                              Edit
+                              {t('admin.usersPage.edit')}
                             </Button>
                             {currentUser?.id !== user.id && (
                               <Button
@@ -337,12 +341,12 @@ export default function UsersPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {editingUser ? 'Edit User' : 'Add New User'}
+                {editingUser ? t('admin.usersPage.dialog.editTitle') : t('admin.usersPage.dialog.addTitle')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label className="text-sm font-medium">{t('admin.usersPage.dialog.name')}</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}

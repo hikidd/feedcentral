@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import { Search, Moon, Sun, Home, Bookmark, BarChart3, Settings, ExternalLink } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
+import { getIntlLocale } from '@/lib/locale';
 
 // Mock data
 const MOCK_ARTICLES = [
@@ -93,7 +95,7 @@ const MOCK_ARTICLES = [
 const CATEGORIES = ['All', 'Tech', 'AI', 'Cyber', 'Science'];
 
 // Utility function for date formatting
-const formatDate = (isoString: string): string => {
+const formatDate = (isoString: string, locale: string): string => {
   const date = new Date(isoString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -105,7 +107,7 @@ const formatDate = (isoString: string): string => {
   } else if (diffDays < 7) {
     return `${diffDays}d ago`;
   } else {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(getIntlLocale(locale), { month: 'short', day: 'numeric' });
   }
 };
 
@@ -134,6 +136,7 @@ const cardVariants = {
 
 export default function DemoPage() {
   const { theme, setTheme } = useTheme();
+  const locale = useLocale();
   const [mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
@@ -288,7 +291,7 @@ export default function DemoPage() {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="font-medium">{article.source}</span>
                     <span>•</span>
-                    <time>{formatDate(article.publishedAt)}</time>
+                    <time>{formatDate(article.publishedAt, locale)}</time>
                   </div>
 
                   <h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-[#7C5CFF] transition-colors">

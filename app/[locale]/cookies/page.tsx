@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Cookie, Info, CheckCircle2, Settings, AlertTriangle, Scale, X } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { ContentLanguageDisclaimer } from '@/components/ContentLanguageDisclaimer';
+import { getIntlLocale } from '@/lib/locale';
 
 export default function CookiesPage() {
   const t = useTranslations();
   const locale = useLocale();
   
   // Format date based on locale
-  const lastUpdated = new Date('2025-11-06').toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
+  const lastUpdated = new Date('2025-11-06').toLocaleDateString(getIntlLocale(locale), {
     year: 'numeric',
     month: 'long',
     day: 'numeric'

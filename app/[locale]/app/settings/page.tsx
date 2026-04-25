@@ -39,6 +39,7 @@ export default function SettingsPage() {
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English' },
     { code: 'fr', name: 'Français', nativeName: 'Français' },
+    { code: 'cn', name: '简体中文', nativeName: '简体中文' },
   ];
 
   const FlagIcon = ({ countryCode }: { countryCode: string }) => {
@@ -83,6 +84,17 @@ export default function SettingsPage() {
             <rect x="10.67" width="10.67" height="24" fill="white"/>
             <rect x="21.33" width="10.67" height="24" fill="#ED2939"/>
           </g>
+        </svg>
+      );
+    } else if (countryCode === 'cn') {
+      return (
+        <svg className="w-10 h-7" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="24" rx="2" fill="#DE2910" />
+          <path d="M7 4.2L7.7 6.3H9.9L8.1 7.6L8.8 9.8L7 8.5L5.2 9.8L5.9 7.6L4.1 6.3H6.3L7 4.2Z" fill="#FFDE00" />
+          <path d="M11.4 3.6L11.72 4.52H12.68L11.9 5.1L12.2 6.04L11.4 5.46L10.6 6.04L10.9 5.1L10.12 4.52H11.08L11.4 3.6Z" fill="#FFDE00" />
+          <path d="M12.8 6.3L13.12 7.22H14.08L13.3 7.8L13.6 8.74L12.8 8.16L12 8.74L12.3 7.8L11.52 7.22H12.48L12.8 6.3Z" fill="#FFDE00" />
+          <path d="M12.4 9.5L12.72 10.42H13.68L12.9 11L13.2 11.94L12.4 11.36L11.6 11.94L11.9 11L11.12 10.42H12.08L12.4 9.5Z" fill="#FFDE00" />
+          <path d="M10.3 11.9L10.62 12.82H11.58L10.8 13.4L11.1 14.34L10.3 13.76L9.5 14.34L9.8 13.4L9.02 12.82H9.98L10.3 11.9Z" fill="#FFDE00" />
         </svg>
       );
     }
@@ -172,7 +184,7 @@ export default function SettingsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || 'Failed to update name');
+        alert(data.error || t('settings.profile.updateNameFailed'));
         setSavingName(false);
         return;
       }
@@ -182,7 +194,7 @@ export default function SettingsPage() {
       setEditingName(false);
     } catch (error) {
       console.error('Error updating name:', error);
-      alert('Failed to update name. Please try again.');
+      alert(t('settings.profile.updateNameRetry'));
     } finally {
       setSavingName(false);
     }
@@ -202,7 +214,7 @@ export default function SettingsPage() {
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
-      alert('Please enter a valid email address');
+      alert(t('settings.profile.invalidEmail'));
       return;
     }
 
@@ -219,7 +231,7 @@ export default function SettingsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || 'Failed to update email');
+        alert(data.error || t('settings.profile.updateEmailFailed'));
         setSavingEmail(false);
         return;
       }
@@ -229,7 +241,7 @@ export default function SettingsPage() {
       setEditingEmail(false);
     } catch (error) {
       console.error('Error updating email:', error);
-      alert('Failed to update email. Please try again.');
+      alert(t('settings.profile.updateEmailRetry'));
     } finally {
       setSavingEmail(false);
     }
@@ -243,7 +255,7 @@ export default function SettingsPage() {
   const handlePasswordChangeClick = () => {
     toast({
       title: t('common.loading'),
-      description: "Password change feature is coming in a later update.",
+      description: t('settings.password.comingSoon'),
       variant: "destructive",
     });
   };
@@ -256,7 +268,7 @@ export default function SettingsPage() {
     if (!licenseKey.trim()) {
       toast({
         title: t('common.error'),
-        description: "Please enter a license key",
+        description: t('settings.license.enterKey'),
         variant: "destructive",
       });
       return;
@@ -277,7 +289,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         toast({
           title: t('common.error'),
-          description: data.error || 'Failed to redeem license key',
+          description: data.error || t('settings.license.redeemFailed'),
           variant: "destructive",
         });
         return;
@@ -285,7 +297,7 @@ export default function SettingsPage() {
 
       toast({
         title: t('common.success'),
-        description: data.message || 'License key activated successfully!',
+        description: data.message || t('settings.license.redeemSuccess'),
       });
 
       // Clear input and refresh user data
@@ -296,7 +308,7 @@ export default function SettingsPage() {
       console.error('Error redeeming license:', error);
       toast({
         title: t('common.error'),
-        description: 'Failed to redeem license key. Please try again.',
+        description: t('settings.license.redeemRetry'),
         variant: "destructive",
       });
     } finally {
@@ -354,10 +366,10 @@ export default function SettingsPage() {
     const now = new Date();
     const daysLeft = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysLeft < 0) return 'Expired';
-    if (daysLeft === 0) return 'Expires today';
-    if (daysLeft === 1) return 'Expires tomorrow';
-    return `Expires in ${daysLeft} days`;
+    if (daysLeft < 0) return t('settings.license.expired');
+    if (daysLeft === 0) return t('settings.license.expiresToday');
+    if (daysLeft === 1) return t('settings.license.expiresTomorrow');
+    return t('settings.license.expiresInDays', { days: daysLeft });
   };
 
   // 2FA Handlers
@@ -374,7 +386,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         toast({
           title: t('common.error'),
-          description: data.error || 'Failed to enable 2FA',
+          description: data.error || t('settings.twoFactor.enableFailed'),
           variant: 'destructive',
         });
         return;
@@ -386,7 +398,7 @@ export default function SettingsPage() {
       console.error('Error enabling 2FA:', error);
       toast({
         title: t('common.error'),
-        description: 'Failed to enable 2FA. Please try again.',
+        description: t('settings.twoFactor.enableRetry'),
         variant: 'destructive',
       });
     } finally {
@@ -398,7 +410,7 @@ export default function SettingsPage() {
     if (!twoFactorCode || twoFactorCode.length !== 6) {
       toast({
         title: t('common.error'),
-        description: 'Please enter a 6-digit code',
+        description: t('settings.twoFactor.enterSixDigitCode'),
         variant: 'destructive',
       });
       return;
@@ -417,7 +429,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         toast({
           title: t('common.error'),
-          description: data.error || 'Invalid verification code',
+          description: data.error || t('settings.twoFactor.invalidVerificationCode'),
           variant: 'destructive',
         });
         return;
@@ -425,7 +437,7 @@ export default function SettingsPage() {
 
       toast({
         title: t('common.success'),
-        description: 'Two-factor authentication enabled successfully!',
+        description: t('settings.twoFactor.enabledSuccess'),
       });
 
       setTwoFactorEnabled(true);
@@ -437,7 +449,7 @@ export default function SettingsPage() {
       console.error('Error verifying 2FA:', error);
       toast({
         title: t('common.error'),
-        description: 'Failed to verify code. Please try again.',
+        description: t('settings.twoFactor.verifyRetry'),
         variant: 'destructive',
       });
     } finally {
@@ -449,7 +461,7 @@ export default function SettingsPage() {
     if (!disablePassword) {
       toast({
         title: t('common.error'),
-        description: 'Please enter your password',
+        description: t('settings.twoFactor.enterPasswordPrompt'),
         variant: 'destructive',
       });
       return;
@@ -468,7 +480,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         toast({
           title: t('common.error'),
-          description: data.error || 'Failed to disable 2FA',
+          description: data.error || t('settings.twoFactor.disableFailed'),
           variant: 'destructive',
         });
         return;
@@ -476,7 +488,7 @@ export default function SettingsPage() {
 
       toast({
         title: t('common.success'),
-        description: 'Two-factor authentication disabled successfully',
+        description: t('settings.twoFactor.disabledSuccess'),
       });
 
       setTwoFactorEnabled(false);
@@ -486,7 +498,7 @@ export default function SettingsPage() {
       console.error('Error disabling 2FA:', error);
       toast({
         title: t('common.error'),
-        description: 'Failed to disable 2FA. Please try again.',
+        description: t('settings.twoFactor.disableRetry'),
         variant: 'destructive',
       });
     } finally {
@@ -814,7 +826,7 @@ export default function SettingsPage() {
                     </label>
                     <div className="px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20">
                       <span className="text-xs font-medium text-yellow-600 dark:text-yellow-500">
-                        Coming Soon
+                        {t('settings.twoFactor.comingSoon')}
                       </span>
                     </div>
                   </div>
@@ -822,9 +834,9 @@ export default function SettingsPage() {
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                     <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-500 shrink-0 mt-0.5" />
                     <div className="text-xs text-yellow-600 dark:text-yellow-400">
-                      <p className="font-medium">Feature Temporarily Disabled</p>
+                      <p className="font-medium">{t('settings.twoFactor.temporarilyDisabled')}</p>
                       <p className="opacity-90 mt-0.5">
-                        Two-Factor Authentication is currently disabled due to technical issues. We're working on fixing this feature for an upcoming release.
+                        {t('settings.twoFactor.temporarilyDisabledDescription')}
                       </p>
                     </div>
                   </div>

@@ -256,20 +256,20 @@ export default function AboutPage() {
                 {t('future.paragraph2')}
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                {t('future.roadmapLink')}{' '}
+                {t('future.roadmapIntro')}{' '}
                 <Link href="/roadmap" className="text-primary hover:underline">
-                  roadmap
-                </Link>
-                {' '}{t('future.roadmapLinkEnd').split(' ')[0]}{' '}
-                <a 
-                  href="https://github.com/BENZOOgataga/feedcentral/issues" 
-                  target="_blank" 
+                  {t('future.roadmapLinkText')}
+                </Link>{' '}
+                {t('future.roadmapMiddle')}{' '}
+                <a
+                  href="https://github.com/BENZOOgataga/feedcentral/issues"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
                   {t('future.githubLink')}
-                </a>
-                {' '}{t('future.roadmapLinkEnd').split(' ').slice(1).join(' ')}
+                </a>{' '}
+                {t('future.roadmapOutro')}
               </p>
             </div>
           </section>

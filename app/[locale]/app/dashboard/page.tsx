@@ -5,6 +5,7 @@ import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { LayoutDashboard, BookmarkIcon, Eye, TrendingUp, Clock, Sparkles } from 'lucide-react';
 import { Link } from '@/i18n-navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import { getIntlLocale } from '@/lib/locale';
 
 interface DashboardStats {
   totalBookmarks: number;
@@ -353,7 +354,7 @@ export default function DashboardPage() {
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {new Date(article.publishedAt).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US')}
+                          {new Date(article.publishedAt).toLocaleDateString(getIntlLocale(locale))}
                         </span>
                       </div>
                     </div>

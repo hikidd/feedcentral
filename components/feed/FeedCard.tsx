@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { decodeHtmlEntities } from '@/lib/decode-html';
 import { useMemo, useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { getIntlLocale } from '@/lib/locale';
 
 interface FeedCardProps {
   article: Article;
@@ -17,12 +18,13 @@ interface FeedCardProps {
 
 export function FeedCard({ article, index = 0 }: FeedCardProps) {
   const t = useTranslations('feed');
+  const locale = useLocale();
   const [imgError, setImgError] = useState(false);
   // currentSrc holds the URL we give to <Image> (proxy first, fallback to remote when allowed)
   const [attemptedFallback, setAttemptedFallback] = useState(false);
   const [proxyChecked, setProxyChecked] = useState(false);
   const [proxyOk, setProxyOk] = useState(false);
-  const formattedDate = new Date(article.publishedAt).toLocaleDateString('en-US', {
+  const formattedDate = new Date(article.publishedAt).toLocaleDateString(getIntlLocale(locale), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -270,7 +272,7 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
               </div>
 
               {article.author && (
-                <span className="hidden sm:inline">by {article.author}</span>
+                <span className="hidden sm:inline">{t('by', { author: article.author })}</span>
               )}
             </div>
           </div>

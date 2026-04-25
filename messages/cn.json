@@ -1,0 +1,1030 @@
+{
+  "metadata": {
+    "title": "观流｜FlowLink",
+    "description": "一个基于 Next.js 构建的专业 RSS 聚合器，提供类似 Vercel 的简洁界面，用于集中管理并验证你的新闻来源。"
+  },
+  "navigation": {
+    "home": "首页",
+    "feed": "信息流",
+    "bookmarks": "书签",
+    "dashboard": "仪表盘",
+    "mySources": "我的来源",
+    "settings": "设置",
+    "admin": "管理",
+    "login": "登录",
+    "logout": "退出登录",
+    "backToFeed": "返回信息流",
+    "backToHome": "返回首页"
+  },
+  "landing": {
+    "hero": {
+      "title": "你的新闻，",
+      "titleHighlight": "集中掌控",
+      "subtitle": "FeedCentral 将你信赖的 RSS 来源聚合到一个简洁现代的界面中。远离噪音，保持信息灵通。",
+      "ctaBrowse": "开始浏览",
+      "ctaChangelog": "更新日志",
+      "ctaSupport": "支持我们"
+    },
+    "mission": {
+      "badge": "我们的使命",
+      "title": "重新掌控你的新闻流",
+      "description1": "在一个充满算法推荐和无尽滚动的世界里，FeedCentral 带你回归本质：",
+      "description1Highlight": "来自你信任来源的精选按时间排序内容",
+      "description2": "我们相信，获取信息不应以牺牲你的隐私、注意力或理智为代价。FeedCentral 以透明、简洁和尊重用户为核心打造。"
+    },
+    "features": {
+      "title": "只提供你需要的，不提供你不需要的",
+      "subtitle": "FeedCentral 将强大功能与简洁、无干扰的体验结合在一起",
+      "verifiedSources": {
+        "title": "已验证来源",
+        "description": "只收录来自可信出版商和成熟媒体的可靠精选 RSS 源。"
+      },
+      "realtimeUpdates": {
+        "title": "实时更新",
+        "description": "自动刷新信息源，让你及时了解突发新闻和最新发布内容。"
+      },
+      "smartBookmarks": {
+        "title": "智能书签",
+        "description": "一键永久保存文章。已收藏内容永不过期。"
+      },
+      "powerfulSearch": {
+        "title": "强大搜索",
+        "description": "支持跨全部文章的全文搜索，并可按来源和分类进行高级筛选。"
+      },
+      "beautifulDesign": {
+        "title": "精美设计",
+        "description": "简洁现代的界面，支持深色模式和适配所有设备的响应式设计。"
+      },
+      "openSource": {
+        "title": "开源",
+        "description": "完全透明的代码库。你可以 fork、自托管，或参与贡献让它变得更好。"
+      }
+    },
+    "privacy": {
+      "badge": "隐私优先",
+      "title": "你的数据属于你自己",
+      "subtitle": "我们严肃对待隐私。以下是我们对你的承诺。",
+      "noTracking": {
+        "title": "不跟踪",
+        "description": "我们不使用分析工具、Cookie 或任何跟踪工具。你的浏览习惯只属于你自己。"
+      },
+      "noAds": {
+        "title": "无广告",
+        "description": "零广告。我们的使命是服务你，而不是广告商。如果你愿意，可以直接支持我们。"
+      },
+      "gdpr": {
+        "title": "符合 GDPR",
+        "description": "在法国运营并完全符合 GDPR。你的数据权利受到法律保护。"
+      }
+    },
+    "sources": {
+      "title": "可信来源",
+      "subtitle": "聚合来自领先科技出版物、博客和新闻媒体的内容。"
+    },
+    "footer": {
+      "project": "项目",
+      "legal": "法律",
+      "resources": "资源",
+      "contact": "联系",
+      "about": "关于",
+      "changelog": "更新日志",
+      "roadmap": "路线图",
+      "rssSources": "RSS 来源",
+      "contributors": "贡献者",
+      "github": "GitHub",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "cookies": "Cookie 政策",
+      "documentation": "文档",
+      "reportIssues": "报告问题",
+      "discussions": "讨论区",
+      "emailSupport": "邮件支持",
+      "officialInstance": "官方实例",
+      "supportUs": "支持我们",
+      "copyright": "FeedCentral。基于 Next.js 构建的开源 RSS 聚合器。",
+      "tagline": "法国运营 • 符合 GDPR • 不跟踪、无广告、不扯淡"
+    }
+  },
+  "app": {
+    "benefitsBanner": {
+      "title": "解锁更多功能",
+      "description": "创建免费账户以保存书签并个性化你的信息流",
+      "bookmarks": "永久保存文章",
+      "preferences": "自定义你的信息流",
+      "createAccount": "创建账户",
+      "signIn": "登录"
+    }
+  },
+  "feed": {
+    "title": "最新文章",
+    "categories": {
+      "all": "全部",
+      "technology": "科技",
+      "science": "科学",
+      "business": "商业",
+      "security": "安全"
+    },
+    "loading": "正在加载文章...",
+    "empty": {
+      "title": "暂无文章",
+      "description": "请稍后回来查看来自你来源的最新更新。",
+      "action": "刷新信息流"
+    },
+    "error": {
+      "title": "加载文章失败",
+      "description": "出了点问题。请重试。",
+      "action": "再试一次"
+    },
+    "imageRemovedForSecurity": "出于安全原因，图片已移除",
+    "openOriginalArticle": "打开原始文章"
+  },
+  "article": {
+    "readOn": "在 {source} 阅读",
+    "by": "作者：{author}",
+    "bookmark": "添加书签",
+    "removeBookmark": "移除书签",
+    "signInToBookmark": "登录后可添加书签",
+    "notFound": {
+      "title": "未找到文章",
+      "description": "你要查找的文章不存在或已被移除。",
+      "action": "返回信息流"
+    }
+  },
+  "bookmarks": {
+    "title": "书签",
+    "subtitle": "你保存的文章",
+    "article": "文章",
+    "articles": "文章",
+    "empty": {
+      "title": "还没有书签",
+      "description": "开始保存你喜欢的文章，建立属于你的个人阅读收藏",
+      "browseArticles": "浏览文章",
+      "benefits": {
+        "title": "为什么要加书签？",
+        "retention": "未加书签的文章会在 7 天后自动删除",
+        "preservation": "已加书签的文章会被永久保留",
+        "organization": "跟踪重要报道",
+        "readingList": "建立你的个人阅读清单"
+      },
+      "signIn": "登录",
+      "createAccount": "创建账户",
+      "hint": "登录后，你会在每篇文章上看到书签按钮"
+    },
+    "features": {
+      "saveForLater": {
+        "title": "稍后阅读",
+        "description": "点击任意文章上的书签图标即可保存"
+      },
+      "accessAnywhere": {
+        "title": "随处访问",
+        "description": "你的书签会在所有设备间同步"
+      },
+      "stayOrganized": {
+        "title": "保持有序",
+        "description": "建立属于你的重要文章资料库"
+      },
+      "neverLoseTrack": {
+        "title": "永不丢失",
+        "description": "即使文章已从信息源中移除，仍会保存在书签中"
+      }
+    },
+    "benefits": {
+      "title": "添加书签的好处：",
+      "save": "保存文章以便稍后阅读",
+      "access": "从任何设备访问你的书签",
+      "track": "跟踪重要报道",
+      "build": "建立你的个人阅读清单",
+      "hint": "登录后，你会在每篇文章上看到书签按钮"
+    },
+    "signInRequired": {
+      "title": "保存你喜欢的文章",
+      "description": "创建账户或登录，以添加文章书签并随时访问。"
+    },
+    "warning": {
+      "title": "加书签后文章将被保留",
+      "description": "未加书签的文章会在 7 天后自动移除以优化存储。你已加书签的文章会被永久保存，永远不会被删除。"
+    },
+    "remove": "移除"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signOut": "退出登录",
+    "login": {
+      "title": "欢迎回来",
+      "subtitle": "登录你的账户",
+      "email": "邮箱地址",
+      "emailPlaceholder": "you@example.com",
+      "password": "密码",
+      "passwordPlaceholder": "••••••••",
+      "submit": "登录",
+      "submitting": "正在登录...",
+      "noAccount": "还没有账户？注册",
+      "register": "在这里注册",
+      "error": "邮箱或密码无效"
+    },
+    "register": {
+      "title": "创建账户",
+      "subtitle": "创建你的账户",
+      "name": "姓名",
+      "namePlaceholder": "John Doe",
+      "email": "邮箱",
+      "password": "密码",
+      "submit": "创建账户",
+      "submitting": "正在创建账户...",
+      "hasAccount": "已有账户？登录",
+      "signIn": "在这里登录",
+      "error": "注册失败",
+      "warning": {
+        "title": "重要提示",
+        "description": "我们的服务器未配置邮件支持。没有密码找回选项。请务必记住你的密码。如果忘记，请联系管理员寻求帮助。"
+      }
+    }
+  },
+  "userMenu": {
+    "adminBadge": "管理员",
+    "adminDashboard": "管理仪表盘",
+    "signOut": "退出登录"
+  },
+  "admin": {
+    "title": "管理面板",
+    "subtitle": "管理你的 FeedCentral",
+    "sources": "来源",
+    "jobs": "任务",
+    "users": "用户",
+    "settings": "设置",
+    "navigation": {
+      "overview": "概览",
+      "sources": "来源",
+      "jobs": "信息源任务",
+      "users": "用户",
+      "licenses": "许可证密钥",
+      "settings": "设置"
+    },
+    "stats": {
+      "totalArticles": "文章总数",
+      "todayArticles": "今日文章",
+      "activeSources": "活跃来源",
+      "categories": "分类"
+    },
+    "settingsPage": {
+      "loading": "加载中...",
+      "headerTitle": "设置",
+      "headerSubtitle": "配置你的 FeedCentral 实例",
+      "sidebarTitle": "设置",
+      "sections": {
+        "general": "常规",
+        "feedConfiguration": "信息源配置",
+        "notifications": "通知",
+        "apiKeys": "API 密钥",
+        "soon": "即将推出"
+      },
+      "general": {
+        "title": "常规设置",
+        "siteNameLabel": "站点名称",
+        "siteNameDescription": "你的信息流聚合实例名称",
+        "siteUrlLabel": "站点 URL",
+        "siteUrlDescription": "你的实例对外访问的公开 URL"
+      },
+      "saveButton": "保存设置",
+      "savingButton": "保存中...",
+      "saveSuccess": "设置保存成功！",
+      "saveError": "设置保存失败",
+      "comingSoonTitle": "即将推出",
+      "comingSoonDescription": "该设置分区目前仍在开发中，将在后续更新中提供。"
+    },
+    "usersPage": {
+      "loading": "加载中...",
+      "title": "用户",
+      "subtitle": "管理用户账户和权限",
+      "addUser": "添加用户",
+      "searchPlaceholder": "按姓名或邮箱搜索用户...",
+      "stats": {
+        "totalUsers": "用户总数",
+        "admins": "管理员",
+        "regularUsers": "普通用户"
+      },
+      "loadingUsers": "正在加载用户...",
+      "table": {
+        "user": "用户",
+        "role": "角色",
+        "created": "创建时间",
+        "lastLogin": "最后登录",
+        "actions": "操作"
+      },
+      "noUsersFound": "未找到用户",
+      "never": "从未",
+      "edit": "编辑",
+      "deleteConfirm": "确定要删除这个用户吗？",
+      "saveFailed": "保存用户失败",
+      "deleteFailed": "删除用户失败",
+      "genericError": "发生错误",
+      "dialog": {
+        "editTitle": "编辑用户",
+        "addTitle": "添加新用户",
+        "name": "姓名",
+        "namePlaceholder": "输入姓名",
+        "email": "邮箱",
+        "emailPlaceholder": "输入邮箱",
+        "password": "密码",
+        "passwordHint": "留空则保持当前密码",
+        "passwordPlaceholderNew": "输入密码",
+        "passwordPlaceholderEdit": "留空则保持当前密码",
+        "role": "角色",
+        "userRole": "用户",
+        "adminRole": "管理员",
+        "cancel": "取消",
+        "saving": "保存中...",
+        "update": "更新",
+        "create": "创建"
+      }
+    },
+    "sourcesPage": {
+      "loading": "正在加载来源...",
+      "title": "RSS 来源",
+      "subtitle": "管理 RSS 信息源及其监控状态",
+      "addSource": "添加来源",
+      "searchPlaceholder": "搜索来源...",
+      "active": "启用中",
+      "inactive": "已停用",
+      "articlesCount": "{count} 篇文章",
+      "lastFetched": "上次抓取：{date}",
+      "fetchNow": "立即抓取",
+      "fetching": "抓取中...",
+      "activate": "启用",
+      "deactivate": "停用",
+      "delete": "删除",
+      "noSourcesFound": "未找到来源",
+      "adjustSearch": "试着调整你的搜索条件",
+      "emptyCta": "添加你的第一个 RSS 来源以开始使用",
+      "deleteDialog": {
+        "title": "删除来源",
+        "description": "这将永久删除该来源，并停止后续抓取。",
+        "warning": "此操作无法撤销。",
+        "cancel": "取消",
+        "deleting": "删除中...",
+        "confirm": "删除来源"
+      },
+      "toggleSuccessActivated": "来源已成功启用",
+      "toggleSuccessDeactivated": "来源已成功停用",
+      "toggleFailed": "更新来源状态失败",
+      "fetchSuccess": "抓取完成：共发现 {found} 篇，新增 {added} 篇",
+      "fetchFailed": "抓取来源失败",
+      "deleteSuccess": "来源删除成功",
+      "deleteFailed": "删除来源失败"
+    },
+    "licensesPage": {
+      "generateFailed": "生成许可证密钥失败",
+      "copySuccessTitle": "已复制",
+      "copySuccessDescription": "许可证密钥已复制到剪贴板",
+      "copyFailed": "复制到剪贴板失败",
+      "title": "许可证密钥生成器",
+      "subtitle": "仅限管理员：为当前 FeedCentral 实例生成高级许可证密钥",
+      "securityTitle": "实例专属密钥",
+      "securityDescription": "这里生成的许可证密钥会通过加密方式绑定到当前这个 FeedCentral 实例。由于使用了实例专属的签名密钥和 HMAC 校验，它们无法在其他实例（包括 fork）上使用。每个部署都必须自行生成密钥。",
+      "generateTitle": "生成新的许可证密钥",
+      "licenseTier": "许可证等级",
+      "premiumOption": "Premium（50 个自定义来源）",
+      "proOption": "Pro（无限来源）",
+      "durationDays": "时长（天）",
+      "durationHint": "{days} 天 = {months} 个月 = {years} 年",
+      "quantity": "数量",
+      "notes": "备注（可选）",
+      "notesPlaceholder": "例如：Patreon 支持者批次 #1",
+      "generating": "生成中...",
+      "generateOne": "生成 1 个许可证密钥",
+      "generateMany": "生成 {count} 个许可证密钥",
+      "generatedTitle": "已生成的密钥",
+      "generatedDescription": "这些密钥已保存到数据库。请现在复制并分发给用户。",
+      "issuedOn": "签发时间：{date}",
+      "copied": "已复制",
+      "copy": "复制",
+      "howItWorks": "许可证密钥工作方式",
+      "bullets": {
+        "format": "密钥格式为：FEED-XXXX-XXXX-XXXX-XXXX",
+        "redeemOnce": "每个密钥只能被单个用户兑换一次",
+        "boundInstance": "密钥通过 HMAC-SHA256 签名绑定到当前实例",
+        "instanceId": "实例 ID 由环境变量 LICENSE_SIGNING_SECRET 推导生成",
+        "differentInstance": "尝试在不同实例（fork）上使用这些密钥将导致签名校验失败",
+        "duration": "时长从密钥被兑换时开始计算，而不是生成时",
+        "revoked": "管理员可以撤销密钥，用户会立即被降级"
+      }
+    }
+  },
+  "search": {
+    "placeholder": "搜索文章...",
+    "searching": "搜索中...",
+    "noResultsFound": "未找到结果",
+    "startTyping": "开始输入以搜索文章",
+    "noResults": "未找到“{query}”的结果",
+    "results": "“{query}”共有 {count} 条结果"
+  },
+  "theme": {
+    "light": "浅色模式",
+    "lightDescription": "干净明亮",
+    "dark": "深色模式",
+    "darkDescription": "更加护眼",
+    "system": "系统"
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "管理你的账户偏好",
+    "profile": {
+      "title": "个人资料",
+      "name": "姓名",
+      "email": "邮箱",
+      "updateProfile": "更新资料",
+      "updated": "个人资料更新成功",
+      "activeStatus": "活跃",
+      "namePlaceholder": "输入你的姓名",
+      "emailPlaceholder": "输入你的邮箱",
+      "invalidEmail": "请输入有效的邮箱地址",
+      "updateNameFailed": "更新姓名失败",
+      "updateNameRetry": "更新姓名失败，请重试。",
+      "updateEmailFailed": "更新邮箱失败",
+      "updateEmailRetry": "更新邮箱失败，请重试。"
+    },
+    "password": {
+      "title": "密码",
+      "change": "修改密码",
+      "current": "当前密码",
+      "new": "新密码",
+      "confirm": "确认新密码",
+      "update": "更新密码",
+      "updated": "密码更新成功",
+      "mismatch": "密码不匹配",
+      "comingSoon": "修改密码功能将在后续更新中推出。"
+    },
+    "appearance": {
+      "title": "外观",
+      "description": "自定义 FeedCentral 的显示方式",
+      "theme": "主题",
+      "language": "语言"
+    },
+    "language": {
+      "title": "语言",
+      "description": "选择你偏好的语言",
+      "selectLanguage": "选择语言"
+    },
+    "license": {
+      "title": "高级许可证",
+      "description": "管理你的高级订阅",
+      "currentStatus": "当前状态",
+      "freeTier": "免费层级",
+      "upgradePrompt": "升级以解锁高级功能",
+      "redeemKey": "兑换许可证密钥",
+      "redeemButton": "激活许可证",
+      "redeeming": "激活中...",
+      "redeemHint": "输入你的许可证密钥，以解锁无限来源等高级功能",
+      "securityTitle": "安全且与实例绑定",
+      "securityMessage": "出于安全考虑，许可证密钥经过加密签名并绑定到此 FeedCentral 实例。每个密钥只能兑换一次。",
+      "enterKey": "请输入许可证密钥",
+      "redeemFailed": "兑换许可证密钥失败",
+      "redeemSuccess": "许可证密钥激活成功！",
+      "redeemRetry": "兑换许可证密钥失败，请重试。",
+      "expired": "已过期",
+      "expiresToday": "今天到期",
+      "expiresTomorrow": "明天到期",
+      "expiresInDays": "将在 {days} 天后到期"
+    },
+    "twoFactor": {
+      "title": "双重身份验证",
+      "description": "为你的账户增加一层额外安全保护",
+      "recommended": "推荐管理员启用",
+      "status": "状态",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "enableButton": "启用 2FA",
+      "enabling": "设置中...",
+      "scanQR": "使用你的身份验证器应用扫描此二维码",
+      "manualEntry": "或手动输入以下代码：",
+      "enterCode": "输入 6 位验证码",
+      "verifyButton": "验证并启用",
+      "verifying": "验证中...",
+      "disableButton": "禁用 2FA",
+      "disabling": "禁用中...",
+      "disableWarning": "输入你的密码以禁用双重身份验证",
+      "enterPassword": "输入你的密码",
+      "comingSoon": "即将推出",
+      "temporarilyDisabled": "功能暂时不可用",
+      "temporarilyDisabledDescription": "双重身份验证目前因技术问题被暂时禁用。我们正在修复此功能，并将在后续版本中恢复。",
+      "enableFailed": "启用 2FA 失败",
+      "enableRetry": "启用 2FA 失败，请重试。",
+      "enterSixDigitCode": "请输入 6 位验证码",
+      "invalidVerificationCode": "验证码无效",
+      "enabledSuccess": "双重身份验证已成功启用！",
+      "verifyRetry": "验证验证码失败，请重试。",
+      "enterPasswordPrompt": "请输入你的密码",
+      "disableFailed": "禁用 2FA 失败",
+      "disabledSuccess": "双重身份验证已成功禁用",
+      "disableRetry": "禁用 2FA 失败，请重试。"
+    }
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "subtitle": "你的阅读统计与活动",
+    "welcome": "欢迎回来，{name}！以下是你的阅读活动概览。",
+    "stats": {
+      "totalBookmarks": "书签总数",
+      "articlesRead": "已读文章",
+      "recentActivity": "最近活动",
+      "articlesSaved": "已保存文章",
+      "totalViewed": "总浏览量",
+      "last7Days": "过去 7 天",
+      "bookmarks": "书签",
+      "sources": "来源",
+      "categories": "分类"
+    },
+    "favoriteCategory": "最喜欢的分类",
+    "bookmarkedArticles": "已收藏 {count} 篇文章",
+    "quickActions": "快捷操作",
+    "browseLatest": "浏览最新文章",
+    "viewAllBookmarks": "查看全部书签",
+    "recentBookmarks": "最近书签",
+    "viewAll": "查看全部",
+    "empty": {
+      "title": "还没有书签",
+      "description": "开始保存文章，即可在这里查看你的阅读统计和活动。",
+      "browseArticles": "浏览文章"
+    },
+    "recentActivity": "最近活动",
+    "topSources": "热门来源",
+    "readingTime": "阅读时间",
+    "thisWeek": "本周",
+    "thisMonth": "本月"
+  },
+  "category": {
+    "all": "全部",
+    "technology": "科技",
+    "science": "科学",
+    "business": "商业",
+    "security": "安全",
+    "entertainment": "娱乐",
+    "sports": "体育",
+    "health": "健康",
+    "finance": "金融",
+    "tech": "科技",
+    "latestArticles": "{category} 分类中的最新文章",
+    "empty": {
+      "title": "未找到文章",
+      "description": "{category} 分类中还没有文章。"
+    }
+  },
+  "appPage": {
+    "title": "全部信息源",
+    "subtitle": "来自你订阅来源的最新文章",
+    "loadMore": "加载更多",
+    "refreshFeeds": "刷新信息源"
+  },
+  "changelog": {
+    "title": "更新日志",
+    "subtitle": "跟踪添加到 FeedCentral 的所有更新、改进和新功能",
+    "note": "注意",
+    "noteDescription": "此更新日志反映的是此特定 FeedCentral 实例所做的更改。某些细节可能与其他部署不同，例如数据库内容、配置设置或自定义功能。",
+    "backToDashboard": "返回仪表盘",
+    "legend": "图例",
+    "updateTypes": "更新类型",
+    "changeTypes": "变更类型",
+    "majorUpdate": "重大更新",
+    "majorDescription": "包含重要新功能、架构变更或重要里程碑的重要版本发布",
+    "minorUpdate": "次要更新",
+    "minorDescription": "新增功能和增强，扩展功能而不破坏现有特性",
+    "patchUpdate": "补丁",
+    "patchDescription": "错误修复、安全更新和不增加新功能的小改进",
+    "feature": "功能",
+    "featureDescription": "新能力和新增内容",
+    "improvement": "改进",
+    "improvementDescription": "增强与优化",
+    "fix": "修复",
+    "fixDescription": "错误修复与更正",
+    "removal": "移除",
+    "removalDescription": "已弃用或已移除的功能",
+    "notification": {
+      "whatsNew": "v{version} 有哪些新内容！",
+      "featuresAndMore": "{count} 项功能及更多",
+      "improvementsAndMore": "{count} 项改进及更多",
+      "fixesAndMore": "{count} 项修复及更多",
+      "updatesAndMore": "{count} 项更新",
+      "viewChangelog": "查看更新日志",
+      "close": "关闭"
+    },
+    "types": {
+      "major": "重大更新",
+      "minor": "次要更新",
+      "patch": "补丁",
+      "feature": "新功能",
+      "improvement": "改进",
+      "fix": "错误修复",
+      "breaking": "破坏性变更"
+    },
+    "categories": {
+      "feature": "功能",
+      "improvement": "改进",
+      "fix": "修复",
+      "removal": "移除",
+      "new": "新增",
+      "improved": "已改进",
+      "fixed": "已修复",
+      "deprecated": "已弃用"
+    },
+    "descriptions": {
+      "major": "包含重要新功能、架构变更或重要里程碑的重要版本发布",
+      "minor": "新增功能和增强，扩展功能而不破坏现有特性",
+      "patch": "错误修复、安全更新和不增加新功能的小改进",
+      "feature": "新能力和新增内容",
+      "improvement": "增强与优化",
+      "fix": "错误修复与更正",
+      "removal": "已弃用或已移除的功能"
+    },
+    "version": "版本",
+    "released": "发布时间",
+    "date": "日期",
+    "clickForDetails": "点击查看详情",
+    "previous": "上一页",
+    "next": "下一页",
+    "showing": "显示第 {start}-{end} 条，共 {total} 个版本",
+    "reportBugs": "如需报告漏洞或问题，",
+    "visitIssuesPage": "请访问我们的问题页面",
+    "suggestFeature": "想建议一个功能或报告问题？",
+    "contactUs": "联系我们"
+  },
+  "contributors": {
+    "title": "贡献者",
+    "subtitle": "感谢所有为 FeedCentral 做出贡献的人",
+    "maintainers": "维护者",
+    "contributors": "贡献者",
+    "viewOnGithub": "在 GitHub 上查看"
+  },
+  "roadmap": {
+    "title": "路线图",
+    "subtitle": "我们对 FeedCentral 未来的计划",
+    "phases": {
+      "current": {
+        "title": "当前状态",
+        "rss": "RSS 信息源聚合",
+        "bookmarks": "文章书签",
+        "auth": "用户账户与身份验证",
+        "search": "搜索功能",
+        "mobile": "移动端友好设计",
+        "translation": "法语翻译"
+      },
+      "soon": {
+        "title": "也许很快™",
+        "pwa": "更好的移动体验与 PWA",
+        "filtering": "按关键词筛选文章",
+        "themes": "改进深色/浅色主题"
+      },
+      "maybe": {
+        "title": "看我心情",
+        "stats": "阅读统计仪表盘",
+        "fulltext": "全文搜索改进",
+        "notifications": "自定义通知设置"
+      },
+      "ambitious": {
+        "title": "大胆设想",
+        "customFeeds": "允许用户添加自己的 RSS 信息源",
+        "ai": "AI 驱动的文章摘要（也许？）",
+        "social": "社交功能（或者算了，我也不知道）"
+      },
+      "dreams": {
+        "title": "白日梦",
+        "apps": "移动应用（iOS/Android）",
+        "extensions": "浏览器扩展",
+        "domination": "统治世界"
+      }
+    },
+    "notice": {
+      "title": "这是一个业余项目",
+      "description": "FeedCentral 是我出于兴趣而构建的，因为我想要一个可以集中阅读新闻的地方，不受社交媒体或电视假新闻的胡扯影响。我有时间、也有心情时才会做这个项目。",
+      "important": "重要提示：",
+      "disclaimer": "下面列出的功能只是我想到的一些点子。它们可能会实现，也可能不会。没有时间表，没有承诺，也没有保证。只有在我想做的时候（如果我想做的话）才会添加新东西。",
+      "opensource": "如果你特别想要某个功能，就 fork 这个项目自己实现吧！它开源是有原因的。"
+    },
+    "timeline": {
+      "title": "“时间线”（其实并不算）"
+    },
+    "idea": {
+      "title": "有想法？",
+      "description": "欢迎在以下位置提交 issue：",
+      "disclaimer": "但请记住：这是一个业余项目。我可能会喜欢你的想法，也可能没有时间去实现它。如果你真的很想要，提交一个 PR 吧！"
+    },
+    "support": {
+      "title": "想支持这个项目吗？",
+      "description": "支持 FeedCentral 的最佳方式是：",
+      "use": "使用它，并分享给其他也讨厌假新闻的人",
+      "star": "如果你觉得有用，请在 GitHub 上给仓库点个 Star",
+      "bugs": "发现问题时报告 bug",
+      "contribute": "如果你是开发者，欢迎贡献代码",
+      "sources": "告诉我你希望添加哪些 RSS 来源",
+      "patreon": "如果你真的想给这个业余项目砸点钱，我有一个",
+      "enough": "但老实说，只要使用 FeedCentral 并提供反馈，就已经足够了！"
+    },
+    "instance": {
+      "title": "关于此路线图",
+      "description": "此路线图适用于位于以下地址的官方 FeedCentral 实例：",
+      "fork": "如果你使用的是某个 fork，它们的路线图可能完全不同（或者根本没有）。"
+    },
+    "status": {
+      "planned": "已计划",
+      "inProgress": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "quarter": "{year} 年第 {number} 季度"
+  },
+  "about": {
+    "title": "关于 FeedCentral",
+    "subtitle": "项目背后的故事以及我们的理念",
+    "backToHome": "返回首页",
+    "origin": {
+      "badge": "项目起源",
+      "title": "源于对现代新闻的不满",
+      "paragraph1": "FeedCentral 诞生于对当前新闻消费现状的不满。社交媒体算法决定你看到什么，新闻网站跟踪你的一举一动，无尽滚动取代了有意识的阅读。",
+      "paragraph2": "我想要一些不同的东西：一个干净、简单、尊重你时间和隐私的界面。没有算法决定什么重要，没有跟踪 Cookie 追着你跑，也没有为了困住你注意力而设计的无限滚动。",
+      "paragraph3": "只有来自你信任来源的新闻，按时间顺序呈现，没有操控。"
+    },
+    "mission": {
+      "badge": "我们的使命",
+      "title": "重新掌控你的新闻流",
+      "paragraph1": "FeedCentral 的使命很简单：让人们掌控自己的新闻获取方式。我们相信，应该由你来决定信任哪些来源，而不是由为互动而优化的算法来决定。",
+      "paragraph2": "我们致力于透明、简洁和尊重用户。没有黑暗模式设计，没有隐藏跟踪，不出售你的数据。只有一个干净的界面，用来阅读你所选择来源的新闻。",
+      "principles": {
+        "title": "核心原则",
+        "transparency": {
+          "title": "透明",
+          "description": "开源代码、清晰的隐私政策，以及对平台运作方式的完全可见性。"
+        },
+        "privacy": {
+          "title": "隐私优先",
+          "description": "没有跟踪 Cookie，没有超出基础使用统计的分析，不出售你的数据。永远不会。"
+        },
+        "simplicity": {
+          "title": "简洁",
+          "description": "一个干净、无干扰的界面，尊重你的时间和注意力。"
+        },
+        "chronological": {
+          "title": "时间顺序信息流",
+          "description": "文章按发布时间排序，而不是按互动算法排序。"
+        }
+      }
+    },
+    "hobbyProject": {
+      "badge": "业余项目",
+      "title": "由一名开发者打造，只因热爱",
+      "paragraph1": "FeedCentral 是由一位开发者在业余时间构建并维护的业余项目。它不是一家追逐增长指标的风投初创公司，也不是一个为盈利优化的商业产品。",
+      "paragraph2": "它是一个出于热情的项目，源于这样一种信念：新闻聚合可以做得更好，应当尊重用户，而不是利用用户。",
+      "paragraph3": "这里没有功能承诺，没有保证响应时间，也没有 SLA。只有持续不断地努力，去构建一些有用的东西，并与那些对新闻消费有相同看法的人分享。"
+    },
+    "openSource": {
+      "badge": "开源",
+      "title": "可自由使用、fork 和修改",
+      "paragraph1": "FeedCentral 在 MIT 许可证下开源。你可以自由使用、研究、修改它，甚至在你愿意的情况下运行自己的实例。",
+      "paragraph2": "位于 feed.benzoogataga.com 的官方实例作为一项公共服务进行维护，但你并没有被锁定。如果你想完全掌控，也可以部署自己的版本。",
+      "linkText": "在 GitHub 上查看"
+    },
+    "future": {
+      "badge": "未来",
+      "title": "构建真正有意义的功能",
+      "paragraph1": "FeedCentral 将继续根据用户反馈以及开发者自身需求不断演进。重点始终会放在改善阅读体验并尊重用户自主权的功能上。",
+      "paragraph2": "自定义 RSS 来源、高级搜索、书签和内容筛选等功能已经实现或已列入计划。但我们始终欢迎功能建议。",
+      "roadmapIntro": "查看",
+      "roadmapLinkText": "路线图",
+      "roadmapMiddle": "了解已规划内容，或",
+      "githubLink": "在 GitHub 上提交 issue",
+      "roadmapOutro": "来提出新的想法。"
+    },
+    "support": {
+      "badge": "支持",
+      "title": "想帮忙吗？",
+      "paragraph1": "FeedCentral 可免费使用，而且将永远如此。但如果你愿意支持这个项目，也有多种方式可以帮忙：",
+      "ways": {
+        "feedback": {
+          "title": "分享反馈",
+          "description": "报告 bug、建议功能，或只是告诉我你的想法。"
+        },
+        "contribute": {
+          "title": "贡献代码",
+          "description": "FeedCentral 是开源的。欢迎提交 Pull Request！"
+        },
+        "spread": {
+          "title": "传播出去",
+          "description": "告诉其他可能会喜欢一个无广告、尊重隐私的新闻聚合器的人。"
+        },
+        "patreon": {
+          "title": "在 Patreon 上支持",
+          "description": "如果你真的想给这个业余项目砸钱，也可以。"
+        }
+      },
+      "patreonButton": "在 Patreon 上支持",
+      "thankYou": "感谢你使用 FeedCentral！"
+    }
+  },
+  "sources": {
+    "title": "RSS 来源",
+    "subtitle": "由 FeedCentral 聚合的可信来源",
+    "active": "活跃来源",
+    "category": "分类",
+    "website": "访问网站",
+    "addSource": "添加来源",
+    "mySources": {
+      "title": "我的来源",
+      "subtitle": "管理你的自定义 RSS 信息源和默认来源偏好",
+      "tabs": {
+        "custom": "自定义来源",
+        "defaults": "默认来源"
+      },
+      "customSources": {
+        "empty": {
+          "title": "还没有自定义来源",
+          "description": "添加你的第一个 RSS 信息源，打造个性化新闻体验",
+          "cta": "添加来源"
+        },
+        "addButton": "添加来源",
+        "stats": {
+          "total": "共 {count} 个",
+          "active": "活跃 {count} 个",
+          "limit": "{current} / {max} 个来源",
+          "unlimited": "无限制"
+        },
+        "upgradePrompt": {
+          "title": "升级到高级版",
+          "description": "你已达到免费层级 10 个自定义来源的限制。升级后可添加无限来源。",
+          "cta": "立即升级"
+        }
+      },
+      "defaultSources": {
+        "title": "默认来源",
+        "description": "切换哪些默认来源显示在你的信息流中。已禁用的来源不会出现在你的个性化视图中。",
+        "empty": "没有可用的默认来源",
+        "enabledCount": "已启用 {count} 个",
+        "disabledCount": "已禁用 {count} 个",
+        "counts": {
+          "total": "总计：{count}",
+          "enabled": "已启用：{count}"
+        }
+      },
+      "sourceCard": {
+        "articles": "{count} 篇文章",
+        "lastFetched": "上次抓取：{date}",
+        "neverFetched": "从未抓取",
+        "fetchError": "抓取错误",
+        "invalid": "无效信息源",
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "statuses": {
+          "enabled": "已启用",
+          "disabled": "已禁用"
+        },
+        "dailyLimit": {
+          "label": "今天：",
+          "unlimited": "无每日限制",
+          "reached": "已达配额上限"
+        },
+        "actions": {
+          "edit": "编辑",
+          "refresh": "刷新",
+          "delete": "删除",
+          "enable": "启用",
+          "disable": "禁用"
+        }
+      },
+      "addDialog": {
+        "title": "添加自定义来源",
+        "description": "将新的 RSS 或 Atom 信息源添加到你的个人来源中",
+        "feedUrl": {
+          "label": "信息源 URL",
+          "placeholder": "https://example.com/feed.xml",
+          "required": "信息源 URL 为必填项",
+          "invalid": "请输入有效的 URL"
+        },
+        "customName": {
+          "label": "自定义名称（可选）",
+          "placeholder": "我最喜欢的博客"
+        },
+        "category": {
+          "label": "分类（可选）",
+          "placeholder": "选择一个分类",
+          "none": "无分类"
+        },
+        "validating": "正在验证信息源...",
+        "adding": "正在添加来源...",
+        "success": "来源添加成功",
+        "errors": {
+          "invalidFeed": "无效的 RSS 信息源",
+          "duplicate": "你已经添加过此信息源",
+          "limitReached": "已达到免费层级限制",
+          "network": "网络错误，请重试",
+          "unknown": "添加来源失败"
+        },
+        "buttons": {
+          "cancel": "取消",
+          "add": "添加来源"
+        }
+      },
+      "editDialog": {
+        "title": "编辑来源",
+        "description": "更新来源设置",
+        "success": "来源更新成功",
+        "error": "更新来源失败",
+        "buttons": {
+          "cancel": "取消",
+          "save": "保存更改"
+        }
+      },
+      "deleteDialog": {
+        "title": "删除来源",
+        "description": "你确定要删除此来源吗？这也会删除此信息源中的所有文章。",
+        "warning": "此操作无法撤销。",
+        "buttons": {
+          "cancel": "取消",
+          "delete": "删除来源"
+        },
+        "success": "来源删除成功",
+        "error": "删除来源失败"
+      },
+      "refreshing": "刷新中...",
+      "refreshSuccess": "发现 {found} 篇文章，新增 {added} 篇",
+      "refreshError": "刷新来源失败",
+      "preferenceUpdateError": "更新来源偏好失败"
+    }
+  },
+  "issues": {
+    "title": "报告问题",
+    "subtitle": "发现了 bug 或有功能请求？",
+    "reportBug": "报告 Bug",
+    "featureRequest": "功能请求",
+    "viewIssues": "查看所有问题",
+    "openOnGithub": "在 GitHub 上打开"
+  },
+  "privacy": {
+    "title": "隐私政策",
+    "subtitle": "我们如何收集、使用和保护你的个人数据",
+    "lastUpdated": "最后更新：{date}",
+    "version": "版本 {version} | 文档 ID：{id}",
+    "applicableTo": "适用于：",
+    "applicableDescription": "仅适用于位于 {url} 的官方 FeedCentral 实例。第三方 fork 必须提供自己的隐私政策。",
+    "introduction": "你的隐私对我们很重要"
+  },
+  "terms": {
+    "title": "服务条款",
+    "subtitle": "使用 FeedCentral 的法律条款和条件",
+    "lastUpdated": "最后更新：{date}",
+    "version": "版本 {version} | 文档 ID：{id}",
+    "applicableTo": "适用于：",
+    "applicableDescription": "仅适用于位于 {url} 的官方 FeedCentral 实例。第三方 fork 必须提供自己的服务条款。",
+    "introduction": "使用 FeedCentral 即表示你同意这些条款"
+  },
+  "cookies": {
+    "title": "Cookie 政策",
+    "subtitle": "我们如何使用 Cookie 和类似技术",
+    "lastUpdated": "最后更新：{date}",
+    "version": "版本 {version} | 文档 ID：{id}",
+    "applicableTo": "适用于：",
+    "applicableDescription": "仅适用于位于 {url} 的官方 FeedCentral 实例。第三方 fork 必须提供自己的 Cookie 政策。",
+    "introduction": "我们仅使用最少量的 Cookie 来提供必要功能"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "description": "你要查找的页面不存在或已被移动。",
+    "backHome": "返回首页"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "tryAgain": "再试一次",
+    "close": "关闭",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "update": "更新",
+    "confirm": "确认",
+    "back": "返回",
+    "prev": "上一页",
+    "next": "下一页",
+    "previous": "上一页",
+    "page": "页",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "refresh": "刷新",
+    "yes": "是",
+    "no": "否",
+    "submit": "提交",
+    "reset": "重置",
+    "apply": "应用",
+    "clear": "清除",
+    "minCharacters": "最少 {count} 个字符",
+    "ariaLabels": {
+      "search": "搜索",
+      "userMenu": "用户菜单",
+      "categoryNav": "分类导航",
+      "languageSwitcher": "切换语言"
+    }
+  },
+  "disclaimer": {
+    "title": "内容语言提示",
+    "description": "出于技术和准确性原因，本页主要内容仅以英文显示。只有导航元素和页面界面会被翻译为你所选的语言。"
+  }
+}

@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRequireAdmin } from '@/lib/hooks/useAuth';
 import { Settings as SettingsIcon, Save, RefreshCw, Database, Key, Globe, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function SettingsPage() {
+  const t = useTranslations();
   const { user, isLoading: authLoading } = useRequireAdmin();
   const [activeSection, setActiveSection] = useState('general');
   const [settings, setSettings] = useState({
@@ -23,7 +25,7 @@ export default function SettingsPage() {
   if (authLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('admin.settingsPage.loading')}</div>
       </div>
     );
   }
@@ -35,10 +37,10 @@ export default function SettingsPage() {
     try {
       // Simulate API call - implement actual save logic later
       await new Promise(resolve => setTimeout(resolve, 1000));
-      setSaveMessage('Settings saved successfully!');
+      setSaveMessage(t('admin.settingsPage.saveSuccess'));
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
-      setSaveMessage('Failed to save settings');
+      setSaveMessage(t('admin.settingsPage.saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -50,10 +52,10 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Settings
+            {t('admin.settingsPage.headerTitle')}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Configure your FeedCentral instance
+            {t('admin.settingsPage.headerSubtitle')}
           </p>
         </div>
 
@@ -62,14 +64,14 @@ export default function SettingsPage() {
           <div className="lg:col-span-1">
             <div className="rounded-lg border border-border bg-card">
               <div className="p-4">
-                <h3 className="text-sm font-medium text-muted-foreground">Settings</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">{t('admin.settingsPage.sidebarTitle')}</h3>
               </div>
               <nav className="space-y-1">
                 {[
-                  { icon: Globe, label: 'General', id: 'general', available: true },
-                  { icon: Database, label: 'Feed Configuration', id: 'feed', available: false },
-                  { icon: Bell, label: 'Notifications', id: 'notifications', available: false },
-                  { icon: Key, label: 'API Keys', id: 'api', available: false },
+                  { icon: Globe, label: t('admin.settingsPage.sections.general'), id: 'general', available: true },
+                  { icon: Database, label: t('admin.settingsPage.sections.feedConfiguration'), id: 'feed', available: false },
+                  { icon: Bell, label: t('admin.settingsPage.sections.notifications'), id: 'notifications', available: false },
+                  { icon: Key, label: t('admin.settingsPage.sections.apiKeys'), id: 'api', available: false },
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
@@ -88,7 +90,7 @@ export default function SettingsPage() {
                       <Icon className="h-4 w-4" />
                       <span className="flex-1 text-left">{item.label}</span>
                       {!item.available && (
-                        <span className="text-xs rounded-full bg-muted px-2 py-0.5">Soon</span>
+                        <span className="text-xs rounded-full bg-muted px-2 py-0.5">{t('admin.settingsPage.sections.soon')}</span>
                       )}
                     </button>
                   );
@@ -105,13 +107,13 @@ export default function SettingsPage() {
                 <div className="rounded-lg border border-border bg-card p-6">
                   <div className="mb-4 flex items-center gap-2">
                     <Globe className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-semibold text-foreground">General Settings</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{t('admin.settingsPage.general.title')}</h2>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-foreground">
-                        Site Name
+                        {t('admin.settingsPage.general.siteNameLabel')}
                       </label>
                       <Input
                         type="text"
@@ -120,13 +122,13 @@ export default function SettingsPage() {
                         placeholder="FeedCentral"
                       />
                       <p className="mt-1 text-xs text-muted-foreground">
-                        The name of your feed aggregator instance
+                        {t('admin.settingsPage.general.siteNameDescription')}
                       </p>
                     </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-medium text-foreground">
-                        Site URL
+                        {t('admin.settingsPage.general.siteUrlLabel')}
                       </label>
                       <Input
                         type="url"
@@ -135,7 +137,7 @@ export default function SettingsPage() {
                         placeholder="https://feedcentral.example.com"
                       />
                       <p className="mt-1 text-xs text-muted-foreground">
-                        The public URL where your instance is hosted
+                        {t('admin.settingsPage.general.siteUrlDescription')}
                       </p>
                     </div>
                   </div>
@@ -147,12 +149,12 @@ export default function SettingsPage() {
                     {isSaving ? (
                       <>
                         <RefreshCw className="h-4 w-4 animate-spin" />
-                        Saving...
+                        {t('admin.settingsPage.savingButton')}
                       </>
                     ) : (
                       <>
                         <Save className="h-4 w-4" />
-                        Save Settings
+                        {t('admin.settingsPage.saveButton')}
                       </>
                     )}
                   </Button>
@@ -177,10 +179,10 @@ export default function SettingsPage() {
                     {activeSection === 'api' && <Key className="h-12 w-12 text-muted-foreground" />}
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">
-                    Coming Soon
+                    {t('admin.settingsPage.comingSoonTitle')}
                   </h3>
                   <p className="text-sm text-muted-foreground max-w-md">
-                    This settings section is currently under development and will be available in a future update.
+                    {t('admin.settingsPage.comingSoonDescription')}
                   </p>
                 </div>
               </div>

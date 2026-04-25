@@ -50,7 +50,7 @@ export function AddSourceDialog({
 
     if (!feedUrl.trim()) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: t('sources.mySources.addDialog.feedUrl.required'),
         variant: 'destructive',
       });
@@ -59,7 +59,7 @@ export function AddSourceDialog({
 
     if (!isValidUrl(feedUrl.trim())) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: t('sources.mySources.addDialog.feedUrl.invalid'),
         variant: 'destructive',
       });
@@ -85,7 +85,7 @@ export function AddSourceDialog({
 
       if (response.ok) {
         toast({
-          title: 'Success',
+          title: t('common.success'),
           description: t('sources.mySources.addDialog.success'),
         });
         setFeedUrl('');
@@ -106,14 +106,14 @@ export function AddSourceDialog({
         }
 
         toast({
-          title: 'Error',
+          title: t('common.error'),
           description: errorMessage,
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: t('sources.mySources.addDialog.errors.network'),
         variant: 'destructive',
       });

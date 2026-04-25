@@ -77,22 +77,22 @@ export function EditSourceDialog({
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: data.message || 'Source updated successfully',
+          title: t('common.success'),
+          description: data.message || t('sources.mySources.editDialog.success'),
         });
         onOpenChange(false);
         onSuccess();
       } else {
         toast({
-          title: 'Error',
-          description: data.error || 'Failed to update source',
+          title: t('common.error'),
+          description: data.error || t('sources.mySources.editDialog.error'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Network error, please try again',
+        title: t('common.error'),
+        description: t('sources.mySources.addDialog.errors.network'),
         variant: 'destructive',
       });
     } finally {

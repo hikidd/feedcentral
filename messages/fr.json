@@ -134,8 +134,7 @@
       "title": "Impossible de charger les articles",
       "description": "Une erreur s'est produite. Veuillez réessayer.",
       "action": "Réessayer"
-    }
-    ,
+    },
     "imageRemovedForSecurity": "Image supprimée pour des raisons de sécurité",
     "openOriginalArticle": "Ouvrir l'article original"
   },
@@ -266,6 +265,149 @@
       "todayArticles": "Articles du jour",
       "activeSources": "Sources actives",
       "categories": "Catégories"
+    },
+    "settingsPage": {
+      "loading": "Chargement...",
+      "headerTitle": "Paramètres",
+      "headerSubtitle": "Configurez votre instance FeedCentral",
+      "sidebarTitle": "Paramètres",
+      "sections": {
+        "general": "Général",
+        "feedConfiguration": "Configuration des flux",
+        "notifications": "Notifications",
+        "apiKeys": "Clés API",
+        "soon": "Bientôt"
+      },
+      "general": {
+        "title": "Paramètres généraux",
+        "siteNameLabel": "Nom du site",
+        "siteNameDescription": "Le nom de votre instance d’agrégateur de flux",
+        "siteUrlLabel": "URL du site",
+        "siteUrlDescription": "L’URL publique où votre instance est hébergée"
+      },
+      "saveButton": "Enregistrer les paramètres",
+      "savingButton": "Enregistrement...",
+      "saveSuccess": "Paramètres enregistrés avec succès !",
+      "saveError": "Échec de l’enregistrement des paramètres",
+      "comingSoonTitle": "Bientôt disponible",
+      "comingSoonDescription": "Cette section des paramètres est en cours de développement et sera disponible dans une prochaine mise à jour."
+    },
+    "usersPage": {
+      "loading": "Chargement...",
+      "title": "Utilisateurs",
+      "subtitle": "Gérez les comptes utilisateurs et les permissions",
+      "addUser": "Ajouter un utilisateur",
+      "searchPlaceholder": "Rechercher des utilisateurs par nom ou email...",
+      "stats": {
+        "totalUsers": "Utilisateurs au total",
+        "admins": "Admins",
+        "regularUsers": "Utilisateurs standards"
+      },
+      "loadingUsers": "Chargement des utilisateurs...",
+      "table": {
+        "user": "Utilisateur",
+        "role": "Rôle",
+        "created": "Créé le",
+        "lastLogin": "Dernière connexion",
+        "actions": "Actions"
+      },
+      "noUsersFound": "Aucun utilisateur trouvé",
+      "never": "Jamais",
+      "edit": "Modifier",
+      "deleteConfirm": "Voulez-vous vraiment supprimer cet utilisateur ?",
+      "saveFailed": "Échec de l’enregistrement de l’utilisateur",
+      "deleteFailed": "Échec de la suppression de l’utilisateur",
+      "genericError": "Une erreur est survenue",
+      "dialog": {
+        "editTitle": "Modifier l’utilisateur",
+        "addTitle": "Ajouter un utilisateur",
+        "name": "Nom",
+        "namePlaceholder": "Entrez le nom",
+        "email": "Email",
+        "emailPlaceholder": "Entrez l’email",
+        "password": "Mot de passe",
+        "passwordHint": "laisser vide pour conserver l’actuel",
+        "passwordPlaceholderNew": "Entrez le mot de passe",
+        "passwordPlaceholderEdit": "Laisser vide pour conserver l’actuel",
+        "role": "Rôle",
+        "userRole": "Utilisateur",
+        "adminRole": "Admin",
+        "cancel": "Annuler",
+        "saving": "Enregistrement...",
+        "update": "Mettre à jour",
+        "create": "Créer"
+      }
+    },
+    "sourcesPage": {
+      "loading": "Chargement des sources...",
+      "title": "Sources RSS",
+      "subtitle": "Gérez les sources RSS et leur surveillance",
+      "addSource": "Ajouter une source",
+      "searchPlaceholder": "Rechercher des sources...",
+      "active": "Active",
+      "inactive": "Inactive",
+      "articlesCount": "{count} articles",
+      "lastFetched": "Dernière récupération : {date}",
+      "fetchNow": "Récupérer maintenant",
+      "fetching": "Récupération...",
+      "activate": "Activer",
+      "deactivate": "Désactiver",
+      "delete": "Supprimer",
+      "noSourcesFound": "Aucune source trouvée",
+      "adjustSearch": "Essayez d’ajuster votre recherche",
+      "emptyCta": "Ajoutez votre première source RSS pour commencer",
+      "deleteDialog": {
+        "title": "Supprimer la source",
+        "description": "Cela supprimera définitivement la source et arrêtera ses récupérations futures.",
+        "warning": "Cette action est irréversible.",
+        "cancel": "Annuler",
+        "deleting": "Suppression...",
+        "confirm": "Supprimer la source"
+      },
+      "toggleSuccessActivated": "Source activée avec succès",
+      "toggleSuccessDeactivated": "Source désactivée avec succès",
+      "toggleFailed": "Échec de la mise à jour du statut de la source",
+      "fetchSuccess": "Récupération terminée : {added} nouveaux sur {found} trouvés",
+      "fetchFailed": "Échec de la récupération de la source",
+      "deleteSuccess": "Source supprimée avec succès",
+      "deleteFailed": "Échec de la suppression de la source"
+    },
+    "licensesPage": {
+      "generateFailed": "Échec de la génération des clés de licence",
+      "copySuccessTitle": "Copié",
+      "copySuccessDescription": "Clé de licence copiée dans le presse-papiers",
+      "copyFailed": "Échec de la copie dans le presse-papiers",
+      "title": "Générateur de clés de licence",
+      "subtitle": "Admin uniquement : générez des clés de licence premium pour cette instance FeedCentral",
+      "securityTitle": "Clés spécifiques à l’instance",
+      "securityDescription": "Les clés de licence générées ici sont liées cryptographiquement à cette instance FeedCentral spécifique. Elles ne peuvent pas être utilisées sur d’autres instances (y compris les forks) en raison de secrets de signature spécifiques à l’instance et de la vérification HMAC. Chaque déploiement doit générer ses propres clés.",
+      "generateTitle": "Générer de nouvelles clés de licence",
+      "licenseTier": "Niveau de licence",
+      "premiumOption": "Premium (50 sources personnalisées)",
+      "proOption": "Pro (sources illimitées)",
+      "durationDays": "Durée (jours)",
+      "durationHint": "{days} jours = {months} mois = {years} an(s)",
+      "quantity": "Quantité",
+      "notes": "Notes (optionnel)",
+      "notesPlaceholder": "ex. lot Patreon supporter #1",
+      "generating": "Génération...",
+      "generateOne": "Générer 1 clé de licence",
+      "generateMany": "Générer {count} clés de licence",
+      "generatedTitle": "Clés générées",
+      "generatedDescription": "Ces clés ont été enregistrées dans la base de données. Copiez-les maintenant et distribuez-les aux utilisateurs.",
+      "issuedOn": "Émise le : {date}",
+      "copied": "Copié",
+      "copy": "Copier",
+      "howItWorks": "Fonctionnement des clés de licence",
+      "bullets": {
+        "format": "Le format des clés est : FEED-XXXX-XXXX-XXXX-XXXX",
+        "redeemOnce": "Chaque clé ne peut être utilisée qu’une seule fois par un seul utilisateur",
+        "boundInstance": "Les clés sont liées à cette instance via une signature HMAC-SHA256",
+        "instanceId": "L’identifiant d’instance est dérivé de la variable d’environnement LICENSE_SIGNING_SECRET",
+        "differentInstance": "Tenter d’utiliser des clés sur une autre instance (fork) fera échouer la vérification de signature",
+        "duration": "La durée est appliquée au moment où la clé est activée, pas au moment de sa génération",
+        "revoked": "Les clés peuvent être révoquées par les admins, ce qui rétrograde immédiatement l’utilisateur"
+      }
     }
   },
   "search": {
@@ -294,7 +436,12 @@
       "updated": "Profil mis à jour avec succès",
       "activeStatus": "Actif",
       "namePlaceholder": "Entrez votre nom",
-      "emailPlaceholder": "Entrez votre email"
+      "emailPlaceholder": "Entrez votre email",
+      "invalidEmail": "Veuillez entrer une adresse email valide",
+      "updateNameFailed": "Échec de la mise à jour du nom",
+      "updateNameRetry": "Échec de la mise à jour du nom. Veuillez réessayer.",
+      "updateEmailFailed": "Échec de la mise à jour de l'email",
+      "updateEmailRetry": "Échec de la mise à jour de l'email. Veuillez réessayer."
     },
     "password": {
       "title": "Mot de passe",
@@ -304,7 +451,8 @@
       "confirm": "Confirmer le nouveau mot de passe",
       "update": "Mettre à jour le mot de passe",
       "updated": "Mot de passe mis à jour avec succès",
-      "mismatch": "Les mots de passe ne correspondent pas"
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "comingSoon": "La fonctionnalité de changement de mot de passe arrivera dans une prochaine mise à jour."
     },
     "appearance": {
       "title": "Apparence",
@@ -328,7 +476,15 @@
       "redeeming": "Activation...",
       "redeemHint": "Entrez votre clé de licence pour débloquer les fonctionnalités premium comme les sources illimitées",
       "securityTitle": "Sécurisé et Spécifique à l'Instance",
-      "securityMessage": "Les clés de licence sont signées cryptographiquement et liées à cette instance FeedCentral pour la sécurité. Chaque clé ne peut être utilisée qu'une seule fois."
+      "securityMessage": "Les clés de licence sont signées cryptographiquement et liées à cette instance FeedCentral pour la sécurité. Chaque clé ne peut être utilisée qu'une seule fois.",
+      "enterKey": "Veuillez entrer une clé de licence",
+      "redeemFailed": "Échec de l'activation de la clé de licence",
+      "redeemSuccess": "Clé de licence activée avec succès !",
+      "redeemRetry": "Échec de l'activation de la clé de licence. Veuillez réessayer.",
+      "expired": "Expirée",
+      "expiresToday": "Expire aujourd'hui",
+      "expiresTomorrow": "Expire demain",
+      "expiresInDays": "Expire dans {days} jours"
     },
     "twoFactor": {
       "title": "Authentification à Deux Facteurs",
@@ -347,7 +503,20 @@
       "disableButton": "Désactiver 2FA",
       "disabling": "Désactivation...",
       "disableWarning": "Entrez votre mot de passe pour désactiver l'authentification à deux facteurs",
-      "enterPassword": "Entrez votre mot de passe"
+      "enterPassword": "Entrez votre mot de passe",
+      "comingSoon": "Bientôt disponible",
+      "temporarilyDisabled": "Fonction temporairement désactivée",
+      "temporarilyDisabledDescription": "L'authentification à deux facteurs est actuellement désactivée en raison de problèmes techniques. Nous travaillons à corriger cette fonctionnalité pour une prochaine version.",
+      "enableFailed": "Échec de l'activation de la 2FA",
+      "enableRetry": "Échec de l'activation de la 2FA. Veuillez réessayer.",
+      "enterSixDigitCode": "Veuillez saisir un code à 6 chiffres",
+      "invalidVerificationCode": "Code de vérification invalide",
+      "enabledSuccess": "Authentification à deux facteurs activée avec succès !",
+      "verifyRetry": "Échec de la vérification du code. Veuillez réessayer.",
+      "enterPasswordPrompt": "Veuillez saisir votre mot de passe",
+      "disableFailed": "Échec de la désactivation de la 2FA",
+      "disabledSuccess": "Authentification à deux facteurs désactivée avec succès",
+      "disableRetry": "Échec de la désactivation de la 2FA. Veuillez réessayer."
     }
   },
   "dashboard": {
@@ -617,9 +786,11 @@
       "title": "Construire des fonctionnalités qui comptent",
       "paragraph1": "FeedCentral continuera d'évoluer en fonction des retours des utilisateurs et des besoins du développeur. L'accent sera toujours mis sur les fonctionnalités qui améliorent l'expérience de lecture et respectent l'autonomie de l'utilisateur.",
       "paragraph2": "Des fonctionnalités comme les sources RSS personnalisées, la recherche avancée, les marque-pages et le filtrage de contenu sont déjà implémentées ou prévues. Mais les demandes de fonctionnalités sont toujours les bienvenues.",
-      "roadmapLink": "Consultez la roadmap pour voir ce qui est prévu, ou",
+      "roadmapIntro": "Consultez la",
+      "roadmapLinkText": "roadmap",
+      "roadmapMiddle": "pour voir ce qui est prévu, ou",
       "githubLink": "ouvrez une issue sur GitHub",
-      "roadmapLinkEnd": "pour suggérer de nouvelles idées."
+      "roadmapOutro": "pour suggérer de nouvelles idées."
     },
     "support": {
       "badge": "Soutien",
@@ -752,6 +923,8 @@
       "editDialog": {
         "title": "Modifier la Source",
         "description": "Mettre à jour les paramètres de la source",
+        "success": "Source mise à jour avec succès",
+        "error": "Échec de la mise à jour de la source",
         "buttons": {
           "cancel": "Annuler",
           "save": "Enregistrer"
@@ -761,6 +934,8 @@
         "title": "Supprimer la Source",
         "description": "Êtes-vous sûr de vouloir supprimer cette source ? Cela supprimera également tous les articles de ce flux.",
         "warning": "Cette action est irréversible.",
+        "success": "Source supprimée avec succès",
+        "error": "Échec de la suppression de la source",
         "buttons": {
           "cancel": "Annuler",
           "delete": "Supprimer la Source"
@@ -768,7 +943,8 @@
       },
       "refreshing": "Actualisation...",
       "refreshSuccess": "{found} articles trouvés, {added} nouveaux ajoutés",
-      "refreshError": "Échec de l'actualisation de la source"
+      "refreshError": "Échec de l'actualisation de la source",
+      "preferenceUpdateError": "Échec de la mise à jour de la préférence de source"
     }
   },
   "issues": {
@@ -814,7 +990,7 @@
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
-        "success": "Succès",
+    "success": "Succès",
     "tryAgain": "Réessayer",
     "close": "Fermer",
     "save": "Enregistrer",
@@ -843,7 +1019,8 @@
     "ariaLabels": {
       "search": "Rechercher",
       "userMenu": "Menu utilisateur",
-      "categoryNav": "Navigation par catégories"
+      "categoryNav": "Navigation par catégories",
+      "languageSwitcher": "Changer de langue"
     }
   },
   "disclaimer": {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n-navigation';
 import { Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,12 @@ import { useTransition, useState, useEffect, useRef } from 'react';
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'cn', name: '简体中文', flag: '🇨🇳' },
 ] as const;
 
 export function LanguageSwitcher() {
   const locale = useLocale();
+  const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -54,7 +56,7 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button ref={triggerRef} variant="ghost" size="icon" className="h-9 w-9">
           <Globe className="h-4 w-4" />
-          <span className="sr-only">Switch language</span>
+          <span className="sr-only">{t('common.ariaLabels.languageSwitcher')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 

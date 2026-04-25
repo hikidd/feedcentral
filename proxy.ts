@@ -2,7 +2,7 @@ import createMiddleware from 'next-intl/middleware';
 
 export default createMiddleware({
   // A list of all locales that are supported
-  locales: ['en', 'fr'],
+  locales: ['en', 'fr', 'cn'],
 
   // Used when no locale matches
   defaultLocale: 'en',
@@ -17,5 +17,5 @@ export const config = {
   // - _next (Next.js internals)
   // - _vercel (Vercel internals)
   // - Static files (images, fonts, etc.)
-  matcher: ['/', '/(en|fr)/:path*'],
+  matcher: ['/', '/(en|fr|cn)/:path*'],
 };

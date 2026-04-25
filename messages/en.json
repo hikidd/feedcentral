@@ -134,8 +134,7 @@
       "title": "Failed to load articles",
       "description": "Something went wrong. Please try again.",
       "action": "Try Again"
-    }
-    ,
+    },
     "imageRemovedForSecurity": "Image removed for security reasons",
     "openOriginalArticle": "Open original article"
   },
@@ -266,6 +265,149 @@
       "todayArticles": "Today's Articles",
       "activeSources": "Active Sources",
       "categories": "Categories"
+    },
+    "settingsPage": {
+      "loading": "Loading...",
+      "headerTitle": "Settings",
+      "headerSubtitle": "Configure your FeedCentral instance",
+      "sidebarTitle": "Settings",
+      "sections": {
+        "general": "General",
+        "feedConfiguration": "Feed Configuration",
+        "notifications": "Notifications",
+        "apiKeys": "API Keys",
+        "soon": "Soon"
+      },
+      "general": {
+        "title": "General Settings",
+        "siteNameLabel": "Site Name",
+        "siteNameDescription": "The name of your feed aggregator instance",
+        "siteUrlLabel": "Site URL",
+        "siteUrlDescription": "The public URL where your instance is hosted"
+      },
+      "saveButton": "Save Settings",
+      "savingButton": "Saving...",
+      "saveSuccess": "Settings saved successfully!",
+      "saveError": "Failed to save settings",
+      "comingSoonTitle": "Coming Soon",
+      "comingSoonDescription": "This settings section is currently under development and will be available in a future update."
+    },
+    "usersPage": {
+      "loading": "Loading...",
+      "title": "Users",
+      "subtitle": "Manage user accounts and permissions",
+      "addUser": "Add User",
+      "searchPlaceholder": "Search users by name or email...",
+      "stats": {
+        "totalUsers": "Total Users",
+        "admins": "Admins",
+        "regularUsers": "Regular Users"
+      },
+      "loadingUsers": "Loading users...",
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "created": "Created",
+        "lastLogin": "Last Login",
+        "actions": "Actions"
+      },
+      "noUsersFound": "No users found",
+      "never": "Never",
+      "edit": "Edit",
+      "deleteConfirm": "Are you sure you want to delete this user?",
+      "saveFailed": "Failed to save user",
+      "deleteFailed": "Failed to delete user",
+      "genericError": "An error occurred",
+      "dialog": {
+        "editTitle": "Edit User",
+        "addTitle": "Add New User",
+        "name": "Name",
+        "namePlaceholder": "Enter name",
+        "email": "Email",
+        "emailPlaceholder": "Enter email",
+        "password": "Password",
+        "passwordHint": "leave blank to keep current",
+        "passwordPlaceholderNew": "Enter password",
+        "passwordPlaceholderEdit": "Leave blank to keep current",
+        "role": "Role",
+        "userRole": "User",
+        "adminRole": "Admin",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "update": "Update",
+        "create": "Create"
+      }
+    },
+    "sourcesPage": {
+      "loading": "Loading sources...",
+      "title": "RSS Sources",
+      "subtitle": "Manage RSS feed sources and monitoring",
+      "addSource": "Add Source",
+      "searchPlaceholder": "Search sources...",
+      "active": "Active",
+      "inactive": "Inactive",
+      "articlesCount": "{count} articles",
+      "lastFetched": "Last fetched: {date}",
+      "fetchNow": "Fetch now",
+      "fetching": "Fetching...",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete",
+      "noSourcesFound": "No sources found",
+      "adjustSearch": "Try adjusting your search",
+      "emptyCta": "Add your first RSS source to get started",
+      "deleteDialog": {
+        "title": "Delete source",
+        "description": "This will permanently delete the source and stop future fetches for it.",
+        "warning": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "deleting": "Deleting...",
+        "confirm": "Delete source"
+      },
+      "toggleSuccessActivated": "Source activated successfully",
+      "toggleSuccessDeactivated": "Source deactivated successfully",
+      "toggleFailed": "Failed to update source status",
+      "fetchSuccess": "Fetch completed: {added} new of {found} found",
+      "fetchFailed": "Failed to fetch source",
+      "deleteSuccess": "Source deleted successfully",
+      "deleteFailed": "Failed to delete source"
+    },
+    "licensesPage": {
+      "generateFailed": "Failed to generate license keys",
+      "copySuccessTitle": "Copied",
+      "copySuccessDescription": "License key copied to clipboard",
+      "copyFailed": "Failed to copy to clipboard",
+      "title": "License Key Generator",
+      "subtitle": "Admin-only: Generate premium license keys for this FeedCentral instance",
+      "securityTitle": "Instance-Specific Keys",
+      "securityDescription": "License keys generated here are cryptographically bound to this specific FeedCentral instance. They cannot be used on other instances (including forks) due to instance-specific signing secrets and HMAC verification. Each deployment must generate its own keys.",
+      "generateTitle": "Generate New License Keys",
+      "licenseTier": "License Tier",
+      "premiumOption": "Premium (50 custom sources)",
+      "proOption": "Pro (Unlimited sources)",
+      "durationDays": "Duration (days)",
+      "durationHint": "{days} days = {months} months = {years} year(s)",
+      "quantity": "Quantity",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "e.g., Patreon supporter batch #1",
+      "generating": "Generating...",
+      "generateOne": "Generate 1 License Key",
+      "generateMany": "Generate {count} License Keys",
+      "generatedTitle": "Generated Keys",
+      "generatedDescription": "These keys have been saved to the database. Copy them now and distribute to users.",
+      "issuedOn": "Issued: {date}",
+      "copied": "Copied",
+      "copy": "Copy",
+      "howItWorks": "How License Keys Work",
+      "bullets": {
+        "format": "Keys are in format: FEED-XXXX-XXXX-XXXX-XXXX",
+        "redeemOnce": "Each key can only be redeemed once by a single user",
+        "boundInstance": "Keys are bound to this instance via HMAC-SHA256 signature",
+        "instanceId": "Instance ID is derived from LICENSE_SIGNING_SECRET environment variable",
+        "differentInstance": "Attempting to use keys on a different instance (fork) will fail signature verification",
+        "duration": "Duration is applied from the moment the key is redeemed, not generated",
+        "revoked": "Keys can be revoked by admins, which immediately downgrades the user"
+      }
     }
   },
   "search": {
@@ -294,7 +436,12 @@
       "updated": "Profile updated successfully",
       "activeStatus": "Active",
       "namePlaceholder": "Enter your name",
-      "emailPlaceholder": "Enter your email"
+      "emailPlaceholder": "Enter your email",
+      "invalidEmail": "Please enter a valid email address",
+      "updateNameFailed": "Failed to update name",
+      "updateNameRetry": "Failed to update name. Please try again.",
+      "updateEmailFailed": "Failed to update email",
+      "updateEmailRetry": "Failed to update email. Please try again."
     },
     "password": {
       "title": "Password",
@@ -304,7 +451,8 @@
       "confirm": "Confirm New Password",
       "update": "Update Password",
       "updated": "Password updated successfully",
-      "mismatch": "Passwords do not match"
+      "mismatch": "Passwords do not match",
+      "comingSoon": "Password change feature is coming in a later update."
     },
     "appearance": {
       "title": "Appearance",
@@ -328,7 +476,15 @@
       "redeeming": "Activating...",
       "redeemHint": "Enter your license key to unlock premium features like unlimited sources",
       "securityTitle": "Secure & Instance-Specific",
-      "securityMessage": "License keys are cryptographically signed and bound to this FeedCentral instance for security. Each key can only be redeemed once."
+      "securityMessage": "License keys are cryptographically signed and bound to this FeedCentral instance for security. Each key can only be redeemed once.",
+      "enterKey": "Please enter a license key",
+      "redeemFailed": "Failed to redeem license key",
+      "redeemSuccess": "License key activated successfully!",
+      "redeemRetry": "Failed to redeem license key. Please try again.",
+      "expired": "Expired",
+      "expiresToday": "Expires today",
+      "expiresTomorrow": "Expires tomorrow",
+      "expiresInDays": "Expires in {days} days"
     },
     "twoFactor": {
       "title": "Two-Factor Authentication",
@@ -347,7 +503,20 @@
       "disableButton": "Disable 2FA",
       "disabling": "Disabling...",
       "disableWarning": "Enter your password to disable two-factor authentication",
-      "enterPassword": "Enter your password"
+      "enterPassword": "Enter your password",
+      "comingSoon": "Coming Soon",
+      "temporarilyDisabled": "Feature Temporarily Disabled",
+      "temporarilyDisabledDescription": "Two-Factor Authentication is currently disabled due to technical issues. We're working on fixing this feature for an upcoming release.",
+      "enableFailed": "Failed to enable 2FA",
+      "enableRetry": "Failed to enable 2FA. Please try again.",
+      "enterSixDigitCode": "Please enter a 6-digit code",
+      "invalidVerificationCode": "Invalid verification code",
+      "enabledSuccess": "Two-factor authentication enabled successfully!",
+      "verifyRetry": "Failed to verify code. Please try again.",
+      "enterPasswordPrompt": "Please enter your password",
+      "disableFailed": "Failed to disable 2FA",
+      "disabledSuccess": "Two-factor authentication disabled successfully",
+      "disableRetry": "Failed to disable 2FA. Please try again."
     }
   },
   "dashboard": {
@@ -617,9 +786,11 @@
       "title": "Building Features That Matter",
       "paragraph1": "FeedCentral will continue to evolve based on user feedback and the developer's own needs. The focus will always be on features that improve the reading experience and respect user agency.",
       "paragraph2": "Features like custom RSS sources, advanced search, bookmarking, and content filtering are already implemented or planned. But feature requests are always welcome.",
-      "roadmapLink": "Check out the roadmap to see what's planned, or",
+      "roadmapIntro": "Check out the",
+      "roadmapLinkText": "roadmap",
+      "roadmapMiddle": "to see what's planned, or",
       "githubLink": "open an issue on GitHub",
-      "roadmapLinkEnd": "to suggest new ideas."
+      "roadmapOutro": "to suggest new ideas."
     },
     "support": {
       "badge": "Support",
@@ -752,6 +923,8 @@
       "editDialog": {
         "title": "Edit Source",
         "description": "Update source settings",
+        "success": "Source updated successfully",
+        "error": "Failed to update source",
         "buttons": {
           "cancel": "Cancel",
           "save": "Save Changes"
@@ -761,6 +934,8 @@
         "title": "Delete Source",
         "description": "Are you sure you want to delete this source? This will also delete all articles from this feed.",
         "warning": "This action cannot be undone.",
+        "success": "Source deleted successfully",
+        "error": "Failed to delete source",
         "buttons": {
           "cancel": "Cancel",
           "delete": "Delete Source"
@@ -768,7 +943,8 @@
       },
       "refreshing": "Refreshing...",
       "refreshSuccess": "Found {found} articles, added {added} new",
-      "refreshError": "Failed to refresh source"
+      "refreshError": "Failed to refresh source",
+      "preferenceUpdateError": "Failed to update source preference"
     }
   },
   "issues": {
@@ -843,7 +1019,8 @@
     "ariaLabels": {
       "search": "Search",
       "userMenu": "User menu",
-      "categoryNav": "Category navigation"
+      "categoryNav": "Category navigation",
+      "languageSwitcher": "Switch language"
     }
   },
   "disclaimer": {

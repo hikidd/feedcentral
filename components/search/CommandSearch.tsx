@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Article } from '@/types';
 import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+import { getIntlLocale } from '@/lib/locale';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface CommandSearchProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface CommandSearchProps {
 
 export function CommandSearch({ isOpen, onClose }: CommandSearchProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Article[]>([]);
@@ -184,7 +186,7 @@ export function CommandSearch({ isOpen, onClose }: CommandSearchProps) {
                           {article.title}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {article.source.name} • {new Date(article.publishedAt).toLocaleDateString()}
+                          {article.source.name} • {new Date(article.publishedAt).toLocaleDateString(getIntlLocale(locale))}
                         </p>
                       </div>
                       <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />

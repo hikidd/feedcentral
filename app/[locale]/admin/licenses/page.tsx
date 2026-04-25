@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Key, Copy, Check, AlertTriangle, Shield } from 'lucide-react';
+import { getIntlLocale } from '@/lib/locale';
 
 interface GeneratedKey {
   id: string;
@@ -17,6 +18,7 @@ interface GeneratedKey {
 
 export default function AdminLicensesPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const { toast } = useToast();
   
   const [tier, setTier] = useState<'premium' | 'pro'>('premium');
@@ -40,12 +42,12 @@ export default function AdminLicensesPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate license keys');
+        throw new Error(data.error || t('admin.licensesPage.generateFailed'));
       }
 
       setGeneratedKeys(data.keys);
       toast({
-        title: 'Success',
+        title: t('common.success'),
         description: data.message,
       });
 
@@ -55,7 +57,7 @@ export default function AdminLicensesPage() {
 
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -70,8 +72,8 @@ export default function AdminLicensesPage() {
       setCopiedKeys(prev => new Set(prev).add(key));
       
       toast({
-        title: 'Copied',
-        description: 'License key copied to clipboard',
+        title: t('admin.licensesPage.copySuccessTitle'),
+        description: t('admin.licensesPage.copySuccessDescription'),
       });
 
       // Reset copied state after 2 seconds
@@ -84,8 +86,8 @@ export default function AdminLicensesPage() {
       }, 2000);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to copy to clipboard',
+        title: t('common.error'),
+        description: t('admin.licensesPage.copyFailed'),
         variant: 'destructive',
       });
     }
@@ -98,9 +100,9 @@ export default function AdminLicensesPage() {
         <div className="flex items-center gap-3 pb-4 border-b border-border">
           <Shield className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">License Key Generator</h1>
+            <h1 className="text-3xl font-bold">{t('admin.licensesPage.title')}</h1>
             <p className="text-sm text-muted-foreground">
-              Admin-only: Generate premium license keys for this FeedCentral instance
+              {t('admin.licensesPage.subtitle')}
             </p>
           </div>
         </div>
@@ -109,11 +111,9 @@ export default function AdminLicensesPage() {
         <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-semibold text-yellow-500">Instance-Specific Keys</p>
+            <p className="font-semibold text-yellow-500">{t('admin.licensesPage.securityTitle')}</p>
             <p className="text-muted-foreground mt-1">
-              License keys generated here are cryptographically bound to this specific FeedCentral instance.
-              They <strong>cannot</strong> be used on other instances (including forks) due to instance-specific
-              signing secrets and HMAC verification. Each deployment must generate its own keys.
+              {t('admin.licensesPage.securityDescription')}
             </p>
           </div>
         </div>
@@ -122,27 +122,27 @@ export default function AdminLicensesPage() {
         <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Key className="h-5 w-5" />
-            Generate New License Keys
+            {t('admin.licensesPage.generateTitle')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tier Selection */}
             <div>
-              <label className="block text-sm font-medium mb-2">License Tier</label>
+              <label className="block text-sm font-medium mb-2">{t('admin.licensesPage.licenseTier')}</label>
               <select
                 value={tier}
                 onChange={(e) => setTier(e.target.value as 'premium' | 'pro')}
                 className="w-full h-10 px-3 rounded-md border border-input bg-background"
                 disabled={generating}
               >
-                <option value="premium">Premium (50 custom sources)</option>
-                <option value="pro">Pro (Unlimited sources)</option>
+                <option value="premium">{t('admin.licensesPage.premiumOption')}</option>
+                <option value="pro">{t('admin.licensesPage.proOption')}</option>
               </select>
             </div>
 
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium mb-2">Duration (days)</label>
+              <label className="block text-sm font-medium mb-2">{t('admin.licensesPage.durationDays')}</label>
               <Input
                 type="number"
                 min="1"
@@ -152,13 +152,17 @@ export default function AdminLicensesPage() {
                 disabled={generating}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {duration} days = {Math.round(duration / 30)} months = {Math.round(duration / 365)} year(s)
+                {t('admin.licensesPage.durationHint', {
+                  days: duration,
+                  months: Math.round(duration / 30),
+                  years: Math.round(duration / 365),
+                })}
               </p>
             </div>
 
             {/* Quantity */}
             <div>
-              <label className="block text-sm font-medium mb-2">Quantity</label>
+              <label className="block text-sm font-medium mb-2">{t('admin.licensesPage.quantity')}</label>
               <Input
                 type="number"
                 min="1"
@@ -171,10 +175,10 @@ export default function AdminLicensesPage() {
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium mb-2">Notes (optional)</label>
+              <label className="block text-sm font-medium mb-2">{t('admin.licensesPage.notes')}</label>
               <Input
                 type="text"
-                placeholder="e.g., Patreon supporter batch #1"
+                placeholder={t('admin.licensesPage.notesPlaceholder')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={generating}
@@ -187,16 +191,20 @@ export default function AdminLicensesPage() {
             disabled={generating}
             className="w-full"
           >
-            {generating ? 'Generating...' : `Generate ${quantity} License Key${quantity > 1 ? 's' : ''}`}
+            {generating
+              ? t('admin.licensesPage.generating')
+              : quantity > 1
+                ? t('admin.licensesPage.generateMany', { count: quantity })
+                : t('admin.licensesPage.generateOne')}
           </Button>
         </div>
 
         {/* Generated Keys Display */}
         {generatedKeys.length > 0 && (
           <div className="bg-card border border-border rounded-lg p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Generated Keys</h2>
+            <h2 className="text-xl font-semibold">{t('admin.licensesPage.generatedTitle')}</h2>
             <p className="text-sm text-muted-foreground">
-              These keys have been saved to the database. Copy them now and distribute to users.
+              {t('admin.licensesPage.generatedDescription')}
             </p>
 
             <div className="space-y-2">
@@ -208,8 +216,8 @@ export default function AdminLicensesPage() {
                   <div className="flex-1 font-mono text-sm">
                     <div className="font-bold text-primary">{keyData.key}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {keyData.tier.toUpperCase()} • {keyData.duration} days • 
-                      Issued: {new Date(keyData.issuedAt).toLocaleDateString()}
+                      {keyData.tier.toUpperCase()} • {keyData.duration} {t('admin.licensesPage.durationDays').replace(' (days)', '').replace('（天）', '')} •
+                      {t('admin.licensesPage.issuedOn', { date: new Date(keyData.issuedAt).toLocaleDateString(getIntlLocale(locale)) })}
                     </div>
                   </div>
                   <Button
@@ -220,12 +228,12 @@ export default function AdminLicensesPage() {
                     {copiedKeys.has(keyData.key) ? (
                       <>
                         <Check className="h-4 w-4 mr-1" />
-                        Copied
+                        {t('admin.licensesPage.copied')}
                       </>
                     ) : (
                       <>
                         <Copy className="h-4 w-4 mr-1" />
-                        Copy
+                        {t('admin.licensesPage.copy')}
                       </>
                     )}
                   </Button>
@@ -237,15 +245,15 @@ export default function AdminLicensesPage() {
 
         {/* Information Panel */}
         <div className="bg-card border border-border rounded-lg p-6 space-y-3">
-          <h3 className="font-semibold">How License Keys Work</h3>
+          <h3 className="font-semibold">{t('admin.licensesPage.howItWorks')}</h3>
           <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
-            <li>Keys are in format: <code className="bg-muted px-1 py-0.5 rounded">FEED-XXXX-XXXX-XXXX-XXXX</code></li>
-            <li>Each key can only be redeemed once by a single user</li>
-            <li>Keys are bound to this instance via HMAC-SHA256 signature</li>
-            <li>Instance ID is derived from LICENSE_SIGNING_SECRET environment variable</li>
-            <li>Attempting to use keys on a different instance (fork) will fail signature verification</li>
-            <li>Duration is applied from the moment the key is redeemed, not generated</li>
-            <li>Keys can be revoked by admins, which immediately downgrades the user</li>
+            <li>{t('admin.licensesPage.bullets.format')} <code className="bg-muted px-1 py-0.5 rounded">FEED-XXXX-XXXX-XXXX-XXXX</code></li>
+            <li>{t('admin.licensesPage.bullets.redeemOnce')}</li>
+            <li>{t('admin.licensesPage.bullets.boundInstance')}</li>
+            <li>{t('admin.licensesPage.bullets.instanceId')}</li>
+            <li>{t('admin.licensesPage.bullets.differentInstance')}</li>
+            <li>{t('admin.licensesPage.bullets.duration')}</li>
+            <li>{t('admin.licensesPage.bullets.revoked')}</li>
           </ul>
         </div>
       </div>

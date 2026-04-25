@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from '@/i18n-navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Rss, Loader2 } from 'lucide-react';
@@ -14,10 +14,12 @@ import { EditSourceDialog } from '@/components/sources/EditSourceDialog';
 import { DeleteSourceDialog } from '@/components/sources/DeleteSourceDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { getIntlLocale } from '@/lib/locale';
 
 export default function MySourcesPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'custom' | 'defaults'>('custom');
@@ -126,14 +128,14 @@ export default function MySourcesPage() {
         fetchSources(); // Refresh the list
       } else {
         toast({
-          title: 'Error',
+          title: t('common.error'),
           description: data.error || t('sources.mySources.refreshError'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: t('sources.mySources.refreshError'),
         variant: 'destructive',
       });
@@ -174,8 +176,8 @@ export default function MySourcesPage() {
         }));
         
         toast({
-          title: 'Error',
-          description: data.error || 'Failed to update source preference',
+          title: t('common.error'),
+          description: data.error || t('sources.mySources.preferenceUpdateError'),
           variant: 'destructive',
         });
       }
@@ -185,10 +187,10 @@ export default function MySourcesPage() {
         ...prev,
         [source.id]: !newState,
       }));
-      
+
       toast({
-        title: 'Error',
-        description: 'Failed to update source preference',
+        title: t('common.error'),
+        description: t('sources.mySources.preferenceUpdateError'),
         variant: 'destructive',
       });
     } finally {
@@ -398,7 +400,7 @@ export default function MySourcesPage() {
                           <span>
                             {source.lastFetchedAt
                               ? t('sources.mySources.sourceCard.lastFetched', {
-                                  date: new Date(source.lastFetchedAt).toLocaleDateString(),
+                                  date: new Date(source.lastFetchedAt).toLocaleDateString(getIntlLocale(locale)),
                                 })
                               : t('sources.mySources.sourceCard.neverFetched')}
                           </span>
