@@ -1,0 +1,15 @@
+{
+  "name": "feedcentral-cloudflare-scheduler",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:scheduled": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250418.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.44.0"
+  }
+}

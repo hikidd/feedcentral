@@ -1,0 +1,19 @@
+name = "feedcentral-scheduler"
+main = "src/index.ts"
+compatibility_date = "2026-04-25"
+
+[vars]
+APP_BASE_URL = "https://kidd.cc.cd"
+FETCH_FEEDS_PATH = "/api/cron/fetch-feeds"
+FETCH_USER_SOURCES_PATH = "/api/cron/fetch-user-sources"
+CLEANUP_ARTICLES_PATH = "/api/cron/cleanup-articles"
+FETCH_FEEDS_QUERY = ""
+FETCH_USER_SOURCES_QUERY = ""
+CLEANUP_ARTICLES_QUERY = ""
+
+[triggers]
+crons = [
+  "0,15,30,45 0-15,22-23 * * *",
+  "7,22,37,52 0-15,22-23 * * *",
+  "55 15 * * *"
+]
