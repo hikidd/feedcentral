@@ -5,7 +5,10 @@ export default createMiddleware({
   locales: ['en', 'fr', 'cn'],
 
   // Used when no locale matches
-  defaultLocale: 'en',
+  defaultLocale: 'cn',
+
+  // Disable browser language detection so the app always falls back to cn
+  localeDetection: false,
 
   // Always show locale in URL for clarity
   localePrefix: 'always',
