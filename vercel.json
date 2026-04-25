@@ -4,15 +4,15 @@
   "crons": [
     {
       "path": "/api/cron/fetch-feeds",
-      "schedule": "7,37 * * * *"
+      "schedule": "0,15,30,45 0-15,22-23 * * *"
     },
     {
       "path": "/api/cron/fetch-user-sources",
-      "schedule": "22,52 * * * *"
+      "schedule": "7,22,37,52 0-15,22-23 * * *"
     },
     {
       "path": "/api/cron/cleanup-articles",
-      "schedule": "15 18 * * *"
+      "schedule": "55 15 * * *"
     }
   ]
 }
