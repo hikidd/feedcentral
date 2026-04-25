@@ -28,6 +28,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: t('title'),
     description: t('description'),
+    icons: {
+      icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+      shortcut: '/icon.svg',
+    },
     keywords: ["RSS", "news", "aggregator", "feed", "reader"],
     openGraph: {
       title: t('title'),
