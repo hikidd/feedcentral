@@ -52,13 +52,6 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
       } else {
         setError(true);
       }
-
-      // Ensure minimum loading time of 1 second for smoother UX
-      const elapsed = Date.now() - startTime;
-      const minLoadTime = 1000;
-      if (elapsed < minLoadTime) {
-        await new Promise(resolve => setTimeout(resolve, minLoadTime - elapsed));
-      }
     } catch (err) {
       console.error('Failed to fetch article:', err);
       setError(true);
