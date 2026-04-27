@@ -187,7 +187,7 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
         {...(imgError ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className={cn(
           'block rounded-xl border border-border/50 bg-card p-4 transition-all duration-150',
-          'hover:-translate-y-0.5 hover:border-border hover:shadow-lg hover:shadow-black/5',
+          'hover:border-border hover:shadow-lg hover:shadow-black/5',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
         )}
       >
