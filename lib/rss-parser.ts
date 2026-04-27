@@ -221,29 +221,44 @@ export class RSSFeedParser {
    * Basic HTML sanitization (remove scripts, styles)
    */
   private sanitizeHtml(html: string): string {
-    // Use sanitize-html to allow a safe subset of tags and attributes.
-    // Transform <img> tags whose host is not in the allowlist into a placeholder
-    // explaining the image was removed for security reasons.
-    const allowedImageHosts = new Set([
-      'images.unsplash.com',
-      'assets.bwbx.io',
-      'ichef.bbci.co.uk',
-      'static01.nyt.com',
-      'cdn.cnn.com',
-      'i.imgur.com',
-      'pbs.twimg.com',
-      'media.npr.org',
-      'cdn.vox-cdn.com',
-      'content.jwplatform.com',
-      'images.theconversation.com',
-    ]);
+    function isPrivateIpv4Hostname(hostname: string) {
+      const parts = hostname.split('.').map((part) => Number(part));
+      if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) return false;
 
-    function isImgHostAllowed(src: string | undefined) {
+      const [a, b] = parts;
+      if (a === 10 || a === 127) return true;
+      if (a === 172 && b >= 16 && b <= 31) return true;
+      if (a === 192 && b === 168) return true;
+      if (a === 169 && b === 254) return true;
+      return false;
+    }
+
+    function isDisallowedImageHost(hostname: string) {
+      const normalized = hostname.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
+      if (!normalized) return true;
+      if (normalized === 'localhost' || normalized === '::1') return true;
+      if (normalized.startsWith('fc') || normalized.startsWith('fd') || normalized.startsWith('fe80:')) return true;
+      return isPrivateIpv4Hostname(normalized);
+    }
+
+    function isSafeImageSrc(src: string | undefined) {
       if (!src) return false;
+
+      const normalized = src.trim();
+      const hasExplicitScheme = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(normalized);
+      const isProtocolRelative = normalized.startsWith('//');
+
+      if (!hasExplicitScheme && !isProtocolRelative) {
+        return true;
+      }
+
       try {
-        const u = new URL(src, 'http://example.com');
-        const host = u.hostname;
-        return allowedImageHosts.has(host) || host === 'localhost' || host === '127.0.0.1';
+        const url = new URL(isProtocolRelative ? `https:${normalized}` : normalized);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          return false;
+        }
+
+        return !isDisallowedImageHost(url.hostname);
       } catch (err) {
         return false;
       }
@@ -257,26 +272,25 @@ export class RSSFeedParser {
         '*': ['class', 'id', 'title', 'style'],
       },
       transformTags: {
-  img: (tagName: string, attribs: any) => {
+        img: (_tagName: string, attribs: any) => {
           const src = attribs.src || attribs['data-src'];
-          if (isImgHostAllowed(src)) {
-            // Keep the image but force rel/noopener on parent links via sanitizer rules
+          if (!isSafeImageSrc(src)) {
             return {
               tagName: 'img',
-              attribs: {
-                src: src || '',
-                alt: attribs.alt || '',
-              },
+              attribs: {},
             };
           }
 
-          // Replace disallowed images with a placeholder DIV carrying a data attribute
           return {
-            tagName: 'div',
-            text: '[Image removed by server: judged unsafe]'
+            tagName: 'img',
+            attribs: {
+              src: src.trim(),
+              alt: attribs.alt || '',
+            },
           };
         }
-      }
+      },
+      exclusiveFilter: (frame: any) => frame.tag === 'img' && !frame.attribs.src,
     }).trim();
   }
 
