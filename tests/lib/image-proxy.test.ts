@@ -1,24 +1,34 @@
-import { getImageProxyConfig, isHostAllowed } from '@/lib/imageProxyConfig';
+import { getImageProxyConfig } from '@/lib/imageProxyConfig';
 
 describe('imageProxyConfig', () => {
   afterEach(() => {
     jest.resetModules();
-    delete process.env.IMAGE_PROXY_ALLOWED_HOSTS;
+    delete process.env.IMAGE_PROXY_MAX_BYTES;
+    delete process.env.IMAGE_PROXY_TIMEOUT_MS;
+    delete process.env.IMAGE_PROXY_CACHE_MAX_AGE;
+    delete process.env.IMAGE_PROXY_CACHE_SMAX;
   });
 
   test('default config returns sensible defaults', () => {
     const cfg = getImageProxyConfig();
     expect(cfg.maxBytes).toBeGreaterThan(0);
-    expect(cfg.allowedHosts.length).toBeGreaterThan(0);
+    expect(cfg.timeoutMs).toBeGreaterThan(0);
+    expect(cfg.maxAge).toBeGreaterThan(0);
+    expect(cfg.sMaxAge).toBeGreaterThan(0);
   });
 
-  test('isHostAllowed matches exact and suffix', () => {
-    process.env.IMAGE_PROXY_ALLOWED_HOSTS = 'example.com,cloudfront.net';
-    // reload module to pick up env
+  test('reads numeric proxy settings from env', () => {
+    process.env.IMAGE_PROXY_MAX_BYTES = '2048';
+    process.env.IMAGE_PROXY_TIMEOUT_MS = '7000';
+    process.env.IMAGE_PROXY_CACHE_MAX_AGE = '120';
+    process.env.IMAGE_PROXY_CACHE_SMAX = '600';
+
     const mod = require('@/lib/imageProxyConfig') as typeof import('@/lib/imageProxyConfig');
     const cfg = mod.getImageProxyConfig();
-    expect(mod.isHostAllowed('cdn.example.com', cfg)).toBe(true);
-    expect(mod.isHostAllowed('foo.cloudfront.net', cfg)).toBe(true);
-    expect(mod.isHostAllowed('evil.com', cfg)).toBe(false);
+
+    expect(cfg.maxBytes).toBe(2048);
+    expect(cfg.timeoutMs).toBe(7000);
+    expect(cfg.maxAge).toBe(120);
+    expect(cfg.sMaxAge).toBe(600);
   });
 });

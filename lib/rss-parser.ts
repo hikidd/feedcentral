@@ -199,19 +199,21 @@ export class RSSFeedParser {
    * Extract full content from RSS item
    */
   private extractContent(item: any): string | undefined {
+    const baseUrl = typeof item.link === 'string' ? item.link : undefined;
+
     // Prefer content:encoded (full content)
     if (item.contentEncoded) {
-      return this.sanitizeHtml(item.contentEncoded);
+      return this.sanitizeHtml(item.contentEncoded, baseUrl);
     }
 
     // Fall back to content
     if (item.content) {
-      return this.sanitizeHtml(item.content);
+      return this.sanitizeHtml(item.content, baseUrl);
     }
 
     // Fall back to description
     if (item.description && item.description !== item.contentSnippet) {
-      return this.sanitizeHtml(item.description);
+      return this.sanitizeHtml(item.description, baseUrl);
     }
 
     return undefined;
@@ -220,7 +222,7 @@ export class RSSFeedParser {
   /**
    * Basic HTML sanitization (remove scripts, styles)
    */
-  private sanitizeHtml(html: string): string {
+  private sanitizeHtml(html: string, baseUrl?: string): string {
     function isPrivateIpv4Hostname(hostname: string) {
       const parts = hostname.split('.').map((part) => Number(part));
       if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) return false;
@@ -241,26 +243,37 @@ export class RSSFeedParser {
       return isPrivateIpv4Hostname(normalized);
     }
 
-    function isSafeImageSrc(src: string | undefined) {
-      if (!src) return false;
+    function normalizeImageSrc(src: string | undefined) {
+      if (!src) return null;
 
       const normalized = src.trim();
       const hasExplicitScheme = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(normalized);
       const isProtocolRelative = normalized.startsWith('//');
 
-      if (!hasExplicitScheme && !isProtocolRelative) {
-        return true;
-      }
-
       try {
-        const url = new URL(isProtocolRelative ? `https:${normalized}` : normalized);
-        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-          return false;
+        const resolved = hasExplicitScheme
+          ? new URL(normalized)
+          : isProtocolRelative
+            ? new URL(`https:${normalized}`)
+            : baseUrl
+              ? new URL(normalized, baseUrl)
+              : null;
+
+        if (!resolved) {
+          return null;
         }
 
-        return !isDisallowedImageHost(url.hostname);
+        if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') {
+          return null;
+        }
+
+        if (isDisallowedImageHost(resolved.hostname)) {
+          return null;
+        }
+
+        return resolved.toString();
       } catch (err) {
-        return false;
+        return null;
       }
     }
 
@@ -273,8 +286,8 @@ export class RSSFeedParser {
       },
       transformTags: {
         img: (_tagName: string, attribs: any) => {
-          const src = attribs.src || attribs['data-src'];
-          if (!isSafeImageSrc(src)) {
+          const src = normalizeImageSrc(attribs.src || attribs['data-src']);
+          if (!src) {
             return {
               tagName: 'img',
               attribs: {},
@@ -284,7 +297,7 @@ export class RSSFeedParser {
           return {
             tagName: 'img',
             attribs: {
-              src: src.trim(),
+              src,
               alt: attribs.alt || '',
             },
           };

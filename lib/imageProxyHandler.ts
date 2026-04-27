@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import dns from 'dns/promises';
 import net from 'net';
 import { prisma } from '@/lib/prisma';
-import { getImageProxyConfig, isHostAllowed } from '@/lib/imageProxyConfig';
+import { getImageProxyConfig } from '@/lib/imageProxyConfig';
 import { cache } from '@/lib/cache';
 import { fetchWithLimit } from '@/lib/fetchWithLimit';
 

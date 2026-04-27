@@ -5,7 +5,6 @@ import { Search, Moon, Sun, Home, Bookmark, BarChart3, Settings, ExternalLink } 
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
-import Image from 'next/image';
 import { getIntlLocale } from '@/lib/locale';
 
 // Mock data
@@ -272,12 +271,11 @@ export default function DemoPage() {
               >
                 {/* Image */}
                 <div className="relative h-48 w-full overflow-hidden bg-secondary">
-                  <Image
+                  <img
                     src={article.imageUrl}
                     alt={article.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
                   />
                   <div className="absolute top-2 right-2">
                     <span className="px-2 py-1 rounded-md text-xs font-medium bg-black/50 text-white backdrop-blur-sm">
