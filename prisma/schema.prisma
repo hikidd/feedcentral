@@ -123,6 +123,9 @@ model Article {
   @@index([publishedAt(sort: Desc)])
   @@index([url])
   @@index([deletedAt]) // Index for filtering out deleted articles
+  @@index([deletedAt, publishedAt(sort: Desc)])
+  @@index([categoryId, deletedAt, publishedAt(sort: Desc)])
+  @@index([sourceId, deletedAt, publishedAt(sort: Desc)])
   @@map("articles")
 }
 

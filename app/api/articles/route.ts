@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '20')));
 
     let articles: any[] = [];
-    let total = 0;
 
     // Build cache key for anonymous queries (do not cache per-user private results)
     const cacheTtlSec = Number(process.env.API_CACHE_TTL_SEC || '60');
@@ -50,14 +49,44 @@ export async function GET(request: NextRequest) {
     };
 
     if (category) {
-      where.category = { slug: category };
+      const categoryRecord = await prisma.category.findUnique({
+        where: { slug: category },
+        select: { id: true },
+      });
+
+      if (!categoryRecord) {
+        const responseBody = {
+          success: true,
+          data: [],
+          pagination: {
+            page,
+            pageSize,
+            total: null,
+            totalPages: null,
+            hasNext: false,
+            hasPrev: false,
+          },
+        };
+
+        if (!skipCache) {
+          try {
+            cache.set(cacheKey, responseBody, cacheTtlSec * 1000);
+          } catch (e) {
+            console.warn('articles: cache set failed', e);
+          }
+        }
+
+        const response = NextResponse.json(responseBody);
+        response.headers.set('Cache-Control', `public, s-maxage=${cacheTtlSec}, stale-while-revalidate=300`);
+        return response;
+      }
+
+      where.categoryId = categoryRecord.id;
     }
 
     if (sourceId) {
       where.sourceId = sourceId;
     }
-
-    total = await prisma.article.count({ where });
 
     articles = await prisma.article.findMany({
       where,
@@ -84,20 +113,21 @@ export async function GET(request: NextRequest) {
         publishedAt: 'desc',
       },
       skip: (page - 1) * pageSize,
-      take: pageSize,
+      take: pageSize + 1,
     });
 
-    const totalPages = Math.ceil(total / pageSize);
+    const hasNext = articles.length > pageSize;
+    const visibleArticles = hasNext ? articles.slice(0, pageSize) : articles;
 
     const responseBody = {
       success: true,
-      data: articles,
+      data: visibleArticles,
       pagination: {
         page,
         pageSize,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
+        total: null,
+        totalPages: null,
+        hasNext,
         hasPrev: page > 1,
       },
     };

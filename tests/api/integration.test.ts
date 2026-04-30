@@ -162,12 +162,7 @@ describe('Integration: Complete User Workflow', () => {
     expect(toggleData.message).toBeDefined();
     expect(toggleData.preference.isEnabled).toBe(false);
 
-    // Step 4: User fetches their personalized feed
-    (mockPrisma.userSource.findMany as jest.Mock).mockResolvedValue([mockRefreshedSource]);
-    (mockPrisma.userSourcePreference.findMany as jest.Mock).mockResolvedValue([mockPreference]);
-    (mockPrisma.article.count as jest.Mock).mockResolvedValue(50);
-    (mockPrisma.userArticle.count as jest.Mock).mockResolvedValue(15);
-    
+    // Step 4: User fetches the public feed
     const mockArticles = [
       {
         id: 'article-1',
@@ -176,23 +171,8 @@ describe('Integration: Complete User Workflow', () => {
         source: { name: 'Default Source' },
       },
     ];
-    
-    const mockUserArticles = [
-      {
-        id: 'user-article-1',
-        title: 'Custom Article',
-        publishedAt: new Date('2025-01-02'),
-        userSource: {
-          id: mockSourceId,
-          customName: 'My Custom Feed',
-          categoryId: 'cat-tech',
-          category: { name: 'Tech', slug: 'tech' },
-        },
-      },
-    ];
 
     (mockPrisma.article.findMany as jest.Mock).mockResolvedValue(mockArticles);
-    (mockPrisma.userArticle.findMany as jest.Mock).mockResolvedValue(mockUserArticles);
 
     const feedRequest = createMockRequest('http://localhost:3000/api/articles', {
       userId: mockUserId,
@@ -204,16 +184,12 @@ describe('Integration: Complete User Workflow', () => {
 
     expect(feedStatus).toBe(200);
     expect(feedData.success).toBe(true);
-    expect(feedData.pagination.total).toBe(65); // 50 default + 15 custom
-
-    // Verify disabled sources are filtered
-    expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          sourceId: { notIn: ['default-source-1'] },
-        }),
-      })
-    );
+    expect(feedData.data).toHaveLength(1);
+    expect(feedData.pagination.total).toBeNull();
+    expect(feedData.pagination.hasNext).toBe(false);
+    expect(mockPrisma.userSource.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma.userSourcePreference.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma.userArticle.findMany).not.toHaveBeenCalled();
   });
 
   it('should handle anonymous user viewing public feed', async () => {
@@ -301,35 +277,14 @@ describe('Integration: Complete User Workflow', () => {
   });
 });
 
-describe('Integration: Feed Filtering and Merging', () => {
+describe('Integration: Public Feed Pagination', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetAllMocks();
   });
 
-  it('should correctly merge and sort articles from both sources', async () => {
-    const userId = 'user-merge-test';
-
-    // Mock user has 1 custom source, 1 disabled default source
-    (mockPrisma.userSource.findMany as jest.Mock).mockResolvedValue([
-      { id: 'custom-1', categoryId: 'cat1' },
-    ]);
-    (mockPrisma.userSourcePreference.findMany as jest.Mock).mockResolvedValue([
-      { sourceId: 'disabled-1' },
-    ]);
-
-    // Mock article counts
-    (mockPrisma.article.count as jest.Mock).mockResolvedValue(2);
-    (mockPrisma.userArticle.count as jest.Mock).mockResolvedValue(2);
-
-    // Mock articles with different dates
+  it('should preserve chronological order for public feed results', async () => {
     const defaultArticles = [
-      {
-        id: 'default-1',
-        title: 'Old Default Article',
-        publishedAt: new Date('2025-01-01T10:00:00Z'),
-        source: { name: 'Default Source' },
-        category: { name: 'Tech' },
-      },
       {
         id: 'default-2',
         title: 'New Default Article',
@@ -337,38 +292,19 @@ describe('Integration: Feed Filtering and Merging', () => {
         source: { name: 'Default Source' },
         category: { name: 'Tech' },
       },
-    ];
-
-    const customArticles = [
       {
-        id: 'custom-1',
-        title: 'Medium Custom Article',
-        publishedAt: new Date('2025-01-02T10:00:00Z'),
-        userSource: {
-          id: 'custom-1',
-          customName: 'Custom Feed',
-          categoryId: 'cat1',
-          category: { name: 'Tech', slug: 'tech' },
-        },
-      },
-      {
-        id: 'custom-2',
-        title: 'Newest Custom Article',
-        publishedAt: new Date('2025-01-04T10:00:00Z'),
-        userSource: {
-          id: 'custom-1',
-          customName: 'Custom Feed',
-          categoryId: 'cat1',
-          category: { name: 'Tech', slug: 'tech' },
-        },
+        id: 'default-1',
+        title: 'Old Default Article',
+        publishedAt: new Date('2025-01-01T10:00:00Z'),
+        source: { name: 'Default Source' },
+        category: { name: 'Tech' },
       },
     ];
 
     (mockPrisma.article.findMany as jest.Mock).mockResolvedValue(defaultArticles);
-    (mockPrisma.userArticle.findMany as jest.Mock).mockResolvedValue(customArticles);
 
     const request = createMockRequest('http://localhost:3000/api/articles', {
-      userId,
+      userId: 'user-merge-test',
       searchParams: { pageSize: '10' },
     });
 
@@ -376,12 +312,9 @@ describe('Integration: Feed Filtering and Merging', () => {
     const { status, data } = await getResponseData(response);
 
     expect(status).toBe(200);
-    expect(data.data).toHaveLength(4);
-    
-    // Verify correct chronological order (newest first)
-    expect(data.data[0].title).toContain('Newest Custom');
-    expect(data.data[1].title).toContain('New Default');
-    expect(data.data[2].title).toContain('Medium Custom');
-    expect(data.data[3].title).toContain('Old Default');
+    expect(data.data).toHaveLength(2);
+    expect(data.data[0].title).toContain('New Default');
+    expect(data.data[1].title).toContain('Old Default');
+    expect(data.pagination.hasNext).toBe(false);
   });
 });

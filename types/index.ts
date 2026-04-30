@@ -104,8 +104,10 @@ export interface PaginatedResponse<T> {
   pagination: {
     page: number;
     pageSize: number;
-    total: number;
-    totalPages: number;
+    total: number | null;
+    totalPages: number | null;
+    hasNext?: boolean;
+    hasPrev?: boolean;
   };
 }
 
