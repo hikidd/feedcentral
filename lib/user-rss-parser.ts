@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import type { UserSource } from '@prisma/client';
 import { RSS_CONFIG } from '@/lib/rss-config';
 import { normalizeHttpUrl } from '@/lib/safe-url';
+import { fetchRssXml } from '@/lib/rss-fetch';
 
 interface ParsedUserArticle {
   title: string;
@@ -41,8 +42,9 @@ export class UserRSSFeedParser {
    */
   async fetchFeed(feedUrl: string): Promise<ParsedUserArticle[]> {
     try {
-      const feed = await this.parser.parseURL(feedUrl);
-      
+      const feedXml = await fetchRssXml(feedUrl);
+      const feed = await this.parser.parseString(feedXml);
+
       // Limit articles per feed to prevent memory issues
       const items = feed.items.slice(0, RSS_CONFIG.MAX_ARTICLES_PER_FEED);
       

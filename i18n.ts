@@ -1,10 +1,8 @@
 import { getRequestConfig } from 'next-intl/server';
+import { defaultLocale, locales, type Locale } from './i18n-config';
 
-// Supported locales
-export const locales = ['en', 'fr', 'cn'] as const;
-export const defaultLocale = 'cn' as const;
-
-export type Locale = (typeof locales)[number];
+export { defaultLocale, locales } from './i18n-config';
+export type { Locale } from './i18n-config';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // This typically corresponds to the `[locale]` segment

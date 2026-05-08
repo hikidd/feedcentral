@@ -6,7 +6,7 @@ import { ArticleContent } from '@/components/reader/ArticleContent';
 import { BackButton } from '@/components/reader/BackButton';
 
 export const dynamic = 'force-static';
-export const revalidate = 600;
+export const revalidate = false;
 
 export function generateStaticParams() {
   return [];

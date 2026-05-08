@@ -2,9 +2,8 @@ import { hostname } from 'os';
 import { prisma } from '@/lib/prisma';
 import { getPublicArticles, type PublicArticlesPage } from '@/lib/articles/get-public-articles';
 import type { PublicArticle } from '@/lib/articles/article-query';
+import { isValidFeedCategorySlug } from '@/lib/feed/category-slug';
 
-const CATEGORY_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const MAX_CATEGORY_LENGTH = 100;
 const DEFAULT_PAGE_SIZE = 20;
 
 export interface FeedCategory {
@@ -91,9 +90,7 @@ function emptyArticlesPage(): FeedArticlesPage {
   };
 }
 
-export function isValidFeedCategorySlug(category: string | null | undefined): category is string {
-  return typeof category === 'string' && category.length <= MAX_CATEGORY_LENGTH && CATEGORY_PATTERN.test(category);
-}
+export { isValidFeedCategorySlug } from '@/lib/feed/category-slug';
 
 function normalizeCategory(category: string | null | undefined): string | null {
   if (!category) {

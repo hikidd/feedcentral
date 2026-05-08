@@ -6,12 +6,9 @@ import { getMaxArticlesPerSourcePerDay } from '@/lib/license';
 // Use require to avoid type-resolution problems in environments missing @types/sanitize-html
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const sanitizeHtmlLib: any = require('sanitize-html');
-import dns from 'dns/promises';
-import { getAllowedFeedCidrs } from '@/lib/env';
 import { normalizeHttpUrl } from '@/lib/safe-url';
-
-// IP/CIDR utilities (simple, focused on IPv4 CIDRs used by allowed list below)
-import net from 'net';
+import { refreshFeedCacheForArticles, type FeedCacheWarmupArticle } from '@/lib/feed/cache-warmup';
+import { ensureUrlAllowed, fetchRssXml } from '@/lib/rss-fetch';
 
 interface ParsedArticle {
   title: string;
@@ -21,77 +18,6 @@ interface ParsedArticle {
   imageUrl?: string;
   author?: string;
   publishedAt: Date;
-}
-
-/**
- * Resolve hostname and validate the resolved IP is not private/reserved unless
- * explicitly allowed. Throws on disallowed addresses.
- */
-async function ensureUrlAllowed(feedUrl: string) {
-  try {
-    const url = new URL(feedUrl);
-
-    // Only http(s) allowed
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      throw new Error('Only HTTP/HTTPS URLs are allowed');
-    }
-
-    const hostname = url.hostname;
-
-    // Resolve the hostname to an address (may return IPv4 or IPv6)
-    const addrs = await dns.lookup(hostname, { all: true });
-
-    // Allowed CIDRs can be configured via environment variable RSS_ALLOWED_CIDRS
-    // (comma-separated). This value is considered sensitive and should not be
-    // committed to source control. If not set, a default list is used.
-    const allowedCidrs = getAllowedFeedCidrs();
-
-    function ipToLong(ip: string) {
-      return ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct, 10), 0) >>> 0;
-    }
-
-    function cidrContains(cidr: string, ip: string) {
-      if (!net.isIP(ip) || net.isIP(ip) === 6) return false; // only IPv4 CIDRs here
-      const [range, bits] = cidr.split('/');
-      const mask = ~(2 ** (32 - Number(bits)) - 1) >>> 0;
-      return (ipToLong(range) & mask) === (ipToLong(ip) & mask);
-    }
-
-    function isPrivateIPv4(ip: string) {
-      const parts = ip.split('.').map((s) => parseInt(s, 10));
-      if (parts[0] === 10) return true;
-      if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
-      if (parts[0] === 192 && parts[1] === 168) return true;
-      if (parts[0] === 127) return true; // loopback
-      if (parts[0] === 169 && parts[1] === 254) return true; // link local
-      return false;
-    }
-
-    for (const a of addrs) {
-      const address = a.address;
-
-      // If IPv6, do a basic check to block ::1 and local ranges
-      if (net.isIP(address) === 6) {
-        const lc = address.toLowerCase();
-        if (lc === '::1' || lc.startsWith('fc') || lc.startsWith('fd') || lc.startsWith('fe80')) {
-          throw new Error('Resolved to a private/reserved IPv6 address');
-        }
-        // otherwise, allow IPv6 addresses (no CIDR checks added here)
-        continue;
-      }
-
-      // IPv4 checks
-      if (isPrivateIPv4(address)) {
-        // allow if it's in the explicit allowed CIDR list
-        const allowed = allowedCidrs.some((c) => cidrContains(c, address));
-        if (!allowed) {
-          throw new Error('Resolved to a private IP address');
-        }
-      }
-    }
-  } catch (err: any) {
-    throw new Error(`Feed URL not allowed: ${err.message || String(err)}`);
-  }
 }
 
 /**
@@ -122,8 +48,9 @@ export class RSSFeedParser {
    */
   async fetchFeed(feedUrl: string): Promise<ParsedArticle[]> {
     try {
-      const feed = await this.parser.parseURL(feedUrl);
-      
+      const feedXml = await fetchRssXml(feedUrl);
+      const feed = await this.parser.parseString(feedXml);
+
       // Limit articles per feed to prevent memory issues
       const items = feed.items.slice(0, RSS_CONFIG.MAX_ARTICLES_PER_FEED);
       
@@ -165,7 +92,8 @@ export class RSSFeedParser {
    * Parse feed metadata without fetching articles
    */
   async parseFeedMetadata(feedUrl: string) {
-    return await this.parser.parseURL(feedUrl);
+    const feedXml = await fetchRssXml(feedUrl);
+    return await this.parser.parseString(feedXml);
   }
 
   /**
@@ -419,9 +347,10 @@ export async function fetchAndStoreArticles(source: Source): Promise<{
 
     // Batch insert all new articles (single query)
     let addedCount = 0;
+    let createdArticles: FeedCacheWarmupArticle[] = [];
     if (newArticles.length > 0) {
       try {
-        await prisma.article.createMany({
+        const insertResult = await prisma.article.createMany({
           data: newArticles.map(article => ({
             title: article.title,
             description: article.description,
@@ -435,7 +364,23 @@ export async function fetchAndStoreArticles(source: Source): Promise<{
           })),
           skipDuplicates: true,
         });
-        addedCount = newArticles.length;
+        addedCount = insertResult.count;
+
+        if (addedCount > 0) {
+          createdArticles = await prisma.article.findMany({
+            where: {
+              sourceId: source.id,
+              url: { in: newArticles.map((article) => article.url) },
+              deletedAt: null,
+            },
+            select: {
+              id: true,
+              category: {
+                select: { slug: true },
+              },
+            },
+          });
+        }
       } catch (error: any) {
         // Log but don't fail - some articles might have been added
         console.warn(`Partial insert failure for ${source.name}:`, error.message);
@@ -459,6 +404,10 @@ export async function fetchAndStoreArticles(source: Source): Promise<{
         },
       }),
     ]);
+
+    if (createdArticles.length > 0) {
+      await refreshFeedCacheForArticles(createdArticles);
+    }
 
     return {
       found: articles.length,
