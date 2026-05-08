@@ -8,6 +8,7 @@ import { getMaxArticlesPerSourcePerDay } from '@/lib/license';
 const sanitizeHtmlLib: any = require('sanitize-html');
 import dns from 'dns/promises';
 import { getAllowedFeedCidrs } from '@/lib/env';
+import { normalizeHttpUrl } from '@/lib/safe-url';
 
 // IP/CIDR utilities (simple, focused on IPv4 CIDRs used by allowed list below)
 import net from 'net';
@@ -126,27 +127,33 @@ export class RSSFeedParser {
       // Limit articles per feed to prevent memory issues
       const items = feed.items.slice(0, RSS_CONFIG.MAX_ARTICLES_PER_FEED);
       
-      return items.map((item) => {
+      return items.flatMap((item) => {
+        const url = normalizeHttpUrl(item.link, feedUrl);
+
+        if (!url) {
+          return [];
+        }
+
         // Extract image from various possible locations
         const imageUrl = this.extractImage(item);
-        
+
         // Extract content (prefer full content over description)
         const content = this.extractContent(item);
-        
+
         // Parse published date
-        const publishedAt = item.pubDate 
-          ? new Date(item.pubDate) 
+        const publishedAt = item.pubDate
+          ? new Date(item.pubDate)
           : new Date();
 
-        return {
+        return [{
           title: this.decodeHtmlEntities(item.title || 'Untitled'),
           description: this.decodeHtmlEntities(item.contentSnippet || item.summary || ''),
           content,
-          url: item.link || '',
+          url,
           imageUrl,
           author: item.creator || item.author || undefined,
           publishedAt,
-        };
+        }];
       });
     } catch (error) {
       console.error(`Failed to fetch feed ${feedUrl}:`, error);

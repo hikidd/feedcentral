@@ -2,6 +2,7 @@ import Parser from 'rss-parser';
 import { prisma } from '@/lib/prisma';
 import type { UserSource } from '@prisma/client';
 import { RSS_CONFIG } from '@/lib/rss-config';
+import { normalizeHttpUrl } from '@/lib/safe-url';
 
 interface ParsedUserArticle {
   title: string;
@@ -45,23 +46,29 @@ export class UserRSSFeedParser {
       // Limit articles per feed to prevent memory issues
       const items = feed.items.slice(0, RSS_CONFIG.MAX_ARTICLES_PER_FEED);
       
-      return items.map((item) => {
+      return items.flatMap((item) => {
+        const url = normalizeHttpUrl(item.link, feedUrl);
+
+        if (!url) {
+          return [];
+        }
+
         // Extract image from various possible locations
         const imageUrl = this.extractImage(item);
-        
+
         // Parse published date
-        const publishedAt = item.pubDate 
-          ? new Date(item.pubDate) 
+        const publishedAt = item.pubDate
+          ? new Date(item.pubDate)
           : new Date();
 
-        return {
+        return [{
           title: this.decodeHtmlEntities(item.title || 'Untitled'),
           excerpt: this.decodeHtmlEntities(item.contentSnippet || item.summary || ''),
-          url: item.link || '',
+          url,
           imageUrl,
           author: item.creator || item.author || undefined,
           publishedAt,
-        };
+        }];
       });
     } catch (error) {
       console.error(`Failed to fetch user feed ${feedUrl}:`, error);

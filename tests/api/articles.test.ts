@@ -4,6 +4,7 @@
  */
 
 import { GET } from '@/app/api/articles/route';
+import { encodeArticleCursor } from '@/lib/articles/cursor';
 import { createMockRequest, getResponseData } from '../helpers/test-utils';
 import { resetAllMocks } from '../helpers/prisma-mock';
 
@@ -55,6 +56,7 @@ describe('GET /api/articles', () => {
         totalPages: null,
         hasNext: false,
         hasPrev: false,
+        nextCursor: null,
       });
       expect(mockPrisma.article.count).not.toHaveBeenCalled();
     });
@@ -85,9 +87,9 @@ describe('GET /api/articles', () => {
 
     it('should fetch one extra record to determine hasNext', async () => {
       (mockPrisma.article.findMany as jest.Mock).mockResolvedValue([
-        { id: '1', title: 'A' },
-        { id: '2', title: 'B' },
-        { id: '3', title: 'C' },
+        { id: '1', title: 'A', publishedAt: new Date('2026-05-03T00:00:00.000Z') },
+        { id: '2', title: 'B', publishedAt: new Date('2026-05-02T00:00:00.000Z') },
+        { id: '3', title: 'C', publishedAt: new Date('2026-05-01T00:00:00.000Z') },
       ]);
 
       const request = createMockRequest('http://localhost:3000/api/articles', {
@@ -104,15 +106,54 @@ describe('GET /api/articles', () => {
       expect(data.pagination.hasPrev).toBe(false);
       expect(data.pagination.total).toBeNull();
       expect(data.pagination.totalPages).toBeNull();
+      expect(data.pagination.nextCursor).toBeTruthy();
       expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          skip: 0,
           take: 3,
+          orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
         })
       );
+      expect(mockPrisma.article.findMany.mock.calls[0][0]).not.toHaveProperty('skip');
     });
 
-    it('should mark the last page without using count', async () => {
+    it('should use cursor pagination without offset when cursor is provided', async () => {
+      const cursor = encodeArticleCursor({
+        publishedAt: '2026-05-02T00:00:00.000Z',
+        id: 'article-2',
+      });
+      (mockPrisma.article.findMany as jest.Mock).mockResolvedValue([
+        { id: 'article-1', title: 'A', publishedAt: new Date('2026-05-01T00:00:00.000Z') },
+      ]);
+
+      const request = createMockRequest('http://localhost:3000/api/articles', {
+        searchParams: { cursor, pageSize: '20' },
+      });
+      const response = await GET(request);
+      const { status, data } = await getResponseData(response);
+
+      expect(status).toBe(200);
+      expect(data.pagination.page).toBeNull();
+      expect(data.pagination.hasPrev).toBe(false);
+      expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            deletedAt: null,
+            OR: [
+              { publishedAt: { lt: new Date('2026-05-02T00:00:00.000Z') } },
+              {
+                publishedAt: new Date('2026-05-02T00:00:00.000Z'),
+                id: { lt: 'article-2' },
+              },
+            ],
+          },
+          take: 21,
+          orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
+        })
+      );
+      expect(mockPrisma.article.findMany.mock.calls[0][0]).not.toHaveProperty('skip');
+    });
+
+    it('should keep legacy offset behavior for explicit page requests', async () => {
       (mockPrisma.article.findMany as jest.Mock).mockResolvedValue([
         { id: '3', title: 'C' },
       ]);
@@ -171,6 +212,93 @@ describe('GET /api/articles', () => {
   });
 
   describe('Error Handling', () => {
+    it('should reject malformed integer query values', async () => {
+      const request = createMockRequest('http://localhost:3000/api/articles', {
+        searchParams: { page: '1abc', pageSize: '20px' },
+      });
+      const response = await GET(request);
+      const { status, data } = await getResponseData(response);
+
+      expect(status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Invalid article query parameters');
+      expect(mockPrisma.article.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should use a safe cache TTL fallback when API_CACHE_TTL_SEC is invalid', async () => {
+      const previousTtl = process.env.API_CACHE_TTL_SEC;
+      process.env.API_CACHE_TTL_SEC = '5000junk';
+      (mockPrisma.article.findMany as jest.Mock).mockResolvedValue([]);
+
+      try {
+        const request = createMockRequest('http://localhost:3000/api/articles');
+        const response = await GET(request);
+        const { status, data } = await getResponseData(response);
+
+        expect(status).toBe(200);
+        expect(data.success).toBe(true);
+        expect(response.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
+      } finally {
+        if (previousTtl == null) {
+          delete process.env.API_CACHE_TTL_SEC;
+        } else {
+          process.env.API_CACHE_TTL_SEC = previousTtl;
+        }
+      }
+    });
+
+    it('should reject excessive legacy page values', async () => {
+      const request = createMockRequest('http://localhost:3000/api/articles', {
+        searchParams: { page: '1001' },
+      });
+      const response = await GET(request);
+      const { status, data } = await getResponseData(response);
+
+      expect(status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Invalid article query parameters');
+      expect(mockPrisma.article.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should reject oversized cursor values before decoding', async () => {
+      const request = createMockRequest('http://localhost:3000/api/articles', {
+        searchParams: { cursor: 'a'.repeat(1025) },
+      });
+      const response = await GET(request);
+      const { status, data } = await getResponseData(response);
+
+      expect(status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Invalid article query parameters');
+      expect(mockPrisma.article.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should reject oversized category values', async () => {
+      const request = createMockRequest('http://localhost:3000/api/articles', {
+        searchParams: { category: 'a'.repeat(101) },
+      });
+      const response = await GET(request);
+      const { status, data } = await getResponseData(response);
+
+      expect(status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Invalid article query parameters');
+      expect(mockPrisma.article.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should reject invalid cursors', async () => {
+      const request = createMockRequest('http://localhost:3000/api/articles', {
+        searchParams: { cursor: 'not-a-valid-cursor' },
+      });
+      const response = await GET(request);
+      const { status, data } = await getResponseData(response);
+
+      expect(status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Invalid article cursor');
+      expect(mockPrisma.article.findMany).not.toHaveBeenCalled();
+    });
+
     it('should handle database errors gracefully', async () => {
       (mockPrisma.article.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
 

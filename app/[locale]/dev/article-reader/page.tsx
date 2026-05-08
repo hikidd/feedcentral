@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ArticleHeader } from '@/components/reader/ArticleHeader';
+import { useLocale, useTranslations } from 'next-intl';
+import { ArticleHeaderView } from '@/components/reader/ArticleHeaderView';
 import { ArticleContent } from '@/components/reader/ArticleContent';
 import { Button } from '@/components/ui/button';
+import { getIntlLocale } from '@/lib/locale';
+import { decodeHtmlEntities } from '@/lib/decode-html';
 import { Article } from '@/types';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Link } from '@/i18n-navigation';
@@ -255,6 +258,13 @@ export default async function BlogPost({ id }) {
 export default function ArticleReaderDevPage() {
   const [currentArticleIndex, setCurrentArticleIndex] = useState(0);
   const currentArticle = sampleArticles[currentArticleIndex];
+  const locale = useLocale();
+  const t = useTranslations('article');
+  const formattedDate = new Date(currentArticle.publishedAt).toLocaleDateString(getIntlLocale(locale), {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   const nextArticle = () => {
     setCurrentArticleIndex((prev) => (prev + 1) % sampleArticles.length);
@@ -346,7 +356,17 @@ export default function ArticleReaderDevPage() {
       {/* Article Content */}
       <div className="content-container px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-3xl">
-          <ArticleHeader article={currentArticle} />
+          <ArticleHeaderView
+            article={currentArticle}
+            formattedDate={formattedDate}
+            labels={{
+              readOn: t('readOn', { source: currentArticle.source.name }),
+              bookmark: t('bookmark'),
+              removeBookmark: t('removeBookmark'),
+              signInToBookmark: t('signInToBookmark'),
+              author: currentArticle.author ? t('by', { author: decodeHtmlEntities(currentArticle.author) }) : null,
+            }}
+          />
           
           {currentArticle.content && (
             <div className="mt-8 border-t border-border pt-8">

@@ -1,3 +1,43 @@
+describe('RSS feed article URL validation', () => {
+  test('drops public feed articles with unsafe links', async () => {
+    const { RSSFeedParser } = require('@/lib/rss-parser');
+    const parser = new RSSFeedParser() as any;
+    parser.parser = {
+      parseURL: jest.fn().mockResolvedValue({
+        items: [
+          { title: 'Unsafe', link: 'javascript:alert(1)', pubDate: '2026-05-01T00:00:00.000Z' },
+          { title: 'Safe', link: '/safe-post', pubDate: '2026-05-02T00:00:00.000Z' },
+        ],
+      }),
+    };
+
+    const articles = await parser.fetchFeed('https://publisher.example/feed.xml');
+
+    expect(articles).toHaveLength(1);
+    expect(articles[0].title).toBe('Safe');
+    expect(articles[0].url).toBe('https://publisher.example/safe-post');
+  });
+
+  test('drops user feed articles with unsafe links', async () => {
+    const { UserRSSFeedParser } = require('@/lib/user-rss-parser');
+    const parser = new UserRSSFeedParser() as any;
+    parser.parser = {
+      parseURL: jest.fn().mockResolvedValue({
+        items: [
+          { title: 'Unsafe', link: 'data:text/html,<script>alert(1)</script>', pubDate: '2026-05-01T00:00:00.000Z' },
+          { title: 'Safe', link: 'https://publisher.example/safe-post', pubDate: '2026-05-02T00:00:00.000Z' },
+        ],
+      }),
+    };
+
+    const articles = await parser.fetchFeed('https://publisher.example/feed.xml');
+
+    expect(articles).toHaveLength(1);
+    expect(articles[0].title).toBe('Safe');
+    expect(articles[0].url).toBe('https://publisher.example/safe-post');
+  });
+});
+
 describe('RSSFeedParser sanitizeHtml', () => {
   function sanitize(html: string, baseUrl?: string) {
     const { RSSFeedParser } = require('@/lib/rss-parser');

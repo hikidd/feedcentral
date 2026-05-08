@@ -102,12 +102,13 @@ export interface ApiResponse<T = unknown> {
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
-    page: number;
+    page: number | null;
     pageSize: number;
     total: number | null;
     totalPages: number | null;
     hasNext?: boolean;
     hasPrev?: boolean;
+    nextCursor?: string | null;
   };
 }
 

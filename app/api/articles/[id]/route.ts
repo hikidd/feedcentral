@@ -1,66 +1,42 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPublicArticle } from '@/lib/articles/get-public-article';
 
-/**
- * GET /api/articles/[id]
- * Fetch single public article by ID
- */
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const ARTICLE_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=1800';
+const ARTICLE_NOT_FOUND_CACHE_CONTROL = 'public, s-maxage=60, stale-while-revalidate=300';
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    
-    // Try to find in default articles first
-    const article = await prisma.article.findFirst({
-      where: { 
-        id,
-        deletedAt: null, // Only show non-deleted articles
-      },
-      include: {
-        source: {
-          select: {
-            id: true,
-            name: true,
-            url: true,
-            logoUrl: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true,
-            icon: true,
-          },
-        },
-      },
-    });
+    const article = await getPublicArticle(id);
 
-    if (article) {
-      return NextResponse.json({
-        success: true,
-        data: article,
-      });
+    if (!article) {
+      const response = NextResponse.json(
+        {
+          success: false,
+          error: 'Article not found',
+        },
+        { status: 404 }
+      );
+      response.headers.set('Cache-Control', ARTICLE_NOT_FOUND_CACHE_CONTROL);
+      return response;
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Article not found',
-      },
-      { status: 404 }
-    );
-  } catch (error: any) {
+    const response = NextResponse.json({
+      success: true,
+      data: article,
+    });
+    response.headers.set('Cache-Control', ARTICLE_CACHE_CONTROL);
+    return response;
+  } catch (error) {
     console.error('Error fetching article:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch article',
       },
       { status: 500 }
     );
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
   }
 }
