@@ -141,19 +141,42 @@ async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<st
 }
 
 export function createPublicHostnameLookup(): http.RequestOptions['lookup'] {
-  return (hostname, _options, callback) => {
-    resolvePublicAddress(hostname)
-      .then(({ address, family }) => callback(null, address, family))
-      .catch((error) => callback(error as NodeJS.ErrnoException, '', 0));
+  return (hostname, options, callback) => {
+    const callbackAny = callback as (...args: any[]) => void;
+    const lookupAll = typeof options === 'object' && options !== null && options.all === true;
+
+    resolvePublicAddresses(hostname)
+      .then((addresses) => {
+        if (lookupAll) {
+          callbackAny(null, addresses);
+          return;
+        }
+
+        const { address, family } = addresses[0];
+        callbackAny(null, address, family);
+      })
+      .catch((error) => {
+        if (lookupAll) {
+          callbackAny(error as NodeJS.ErrnoException, []);
+          return;
+        }
+
+        callbackAny(error as NodeJS.ErrnoException, '', 0);
+      });
   };
 }
 
 async function resolvePublicAddress(hostname: string): Promise<ResolvedAddress> {
+  const addresses = await resolvePublicAddresses(hostname);
+  return addresses[0];
+}
+
+async function resolvePublicAddresses(hostname: string): Promise<ResolvedAddress[]> {
   const literalFamily = net.isIP(hostname);
 
   if (literalFamily) {
     assertAddressAllowed(hostname);
-    return { address: hostname, family: literalFamily };
+    return [{ address: hostname, family: literalFamily }];
   }
 
   const addresses = await dns.lookup(hostname, { all: true });
@@ -166,8 +189,7 @@ async function resolvePublicAddress(hostname: string): Promise<ResolvedAddress> 
     assertAddressAllowed(item.address);
   }
 
-  const first = addresses[0];
-  return { address: first.address, family: first.family };
+  return addresses.map(({ address, family }) => ({ address, family }));
 }
 
 function assertAddressAllowed(address: string) {

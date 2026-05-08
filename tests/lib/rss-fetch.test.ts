@@ -117,4 +117,27 @@ describe('RSS fetch SSRF protections', () => {
 
     await expect(fetchRssXml('http://publisher.example/feed.xml')).resolves.toBe('<rss><channel /></rss>');
   });
+
+  it('returns address arrays when Node requests all lookup results', async () => {
+    mockLookup.mockResolvedValue([
+      { address: '8.8.8.8', family: 4 },
+      { address: '8.8.4.4', family: 4 },
+    ]);
+    const { createPublicHostnameLookup } = require('@/lib/rss-fetch');
+    const lookup = createPublicHostnameLookup();
+
+    await expect(new Promise((resolve, reject) => {
+      (lookup as any)('publisher.example', { all: true }, (error: Error | null, addresses: unknown) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(addresses);
+      });
+    })).resolves.toEqual([
+      { address: '8.8.8.8', family: 4 },
+      { address: '8.8.4.4', family: 4 },
+    ]);
+  });
 });
