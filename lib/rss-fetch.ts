@@ -77,7 +77,7 @@ async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<st
           'User-Agent': RSS_CONFIG.USER_AGENT,
         },
         timeout: RSS_CONFIG.FEED_TIMEOUT,
-        lookup: createValidatedLookup(),
+        lookup: createPublicHostnameLookup(),
       },
       (response) => {
         const statusCode = response.statusCode ?? 0;
@@ -140,7 +140,7 @@ async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<st
   });
 }
 
-function createValidatedLookup(): http.RequestOptions['lookup'] {
+export function createPublicHostnameLookup(): http.RequestOptions['lookup'] {
   return (hostname, _options, callback) => {
     resolvePublicAddress(hostname)
       .then(({ address, family }) => callback(null, address, family))

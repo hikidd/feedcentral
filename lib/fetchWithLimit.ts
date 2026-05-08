@@ -1,13 +1,13 @@
+import http from 'http';
+import https from 'https';
+import { createPublicHostnameLookup, ensureUrlAllowed } from '@/lib/rss-fetch';
+
 type FetchOpts = {
   timeoutMs?: number;
   maxBytes?: number;
   redirect?: RequestRedirect;
 };
 
-/**
- * Fetch a resource with a timeout and a max-bytes read. Returns a small
- * result object with either buffer on success or an error code.
- */
 export async function fetchWithLimit(
   url: string,
   opts: FetchOpts = {}
@@ -19,66 +19,132 @@ export async function fetchWithLimit(
   error?: 'timeout' | 'too-large' | 'unsupported-type' | 'redirect' | string;
 }> {
   const timeoutMs = opts.timeoutMs ?? 5000;
-  const maxBytes = opts.maxBytes ?? 1024 * 1024; // 1MB
-
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
+  const maxBytes = opts.maxBytes ?? 1024 * 1024;
 
   try {
-    const resp = await fetch(url, { method: 'GET', signal: controller.signal, redirect: opts.redirect ?? 'manual' });
+    const parsed = new URL(url);
 
-    if (resp.status >= 300 && resp.status < 400) {
-      return { ok: false, status: resp.status, error: 'redirect' };
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { ok: false, error: 'unsupported-protocol' };
     }
 
-    if (!resp.ok) return { ok: false, status: resp.status, error: 'bad-status' };
+    await ensureUrlAllowed(parsed.toString());
 
-    const ct = resp.headers.get('content-type') || '';
-    if (!ct.startsWith('image/')) return { ok: false, status: resp.status, error: 'unsupported-type' };
-
-    const lengthHeader = resp.headers.get('content-length');
-    if (lengthHeader) {
-      const num = Number(lengthHeader);
-      if (!Number.isNaN(num) && num > maxBytes) return { ok: false, status: resp.status, error: 'too-large' };
-    }
-
-    // Read the body into an ArrayBuffer but stop after maxBytes
-    const reader = resp.body?.getReader();
-    if (!reader) return { ok: false, status: resp.status, error: 'no-body' };
-
-    const chunks: Uint8Array[] = [];
-    let received = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (!value) continue;
-      received += value.byteLength;
-      if (received > maxBytes) {
-        try {
-          reader.cancel();
-        } catch {}
-        return { ok: false, status: resp.status, error: 'too-large' };
-      }
-      chunks.push(value);
-    }
-
-    // concat
-    const total = chunks.reduce((s, c) => s + c.byteLength, 0);
-    const out = new Uint8Array(total);
-    let offset = 0;
-    for (const c of chunks) {
-      out.set(c, offset);
-      offset += c.byteLength;
-    }
-
-    return { ok: true, status: resp.status, headers: resp.headers, buffer: out.buffer };
-  } catch (err: any) {
-    if (err && err.name === 'AbortError') return { ok: false, error: 'timeout' };
-    return { ok: false, error: String(err) };
-  } finally {
-    clearTimeout(id);
+    return await fetchWithHttpClient(parsed, {
+      timeoutMs,
+      maxBytes,
+      redirect: opts.redirect ?? 'manual',
+    });
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+async function fetchWithHttpClient(
+  url: URL,
+  opts: Required<FetchOpts>
+): ReturnType<typeof fetchWithLimit> {
+  return new Promise((resolve) => {
+    const client = url.protocol === 'https:' ? https : http;
+    const request = client.request(
+      url,
+      {
+        method: 'GET',
+        timeout: opts.timeoutMs,
+        lookup: createPublicHostnameLookup(),
+      },
+      (response) => {
+        const status = response.statusCode ?? 0;
+        const headers = new Headers();
+
+        for (const [key, value] of Object.entries(response.headers)) {
+          if (Array.isArray(value)) {
+            headers.set(key, value.join(', '));
+          } else if (value != null) {
+            headers.set(key, String(value));
+          }
+        }
+
+        if (status >= 300 && status < 400) {
+          response.resume();
+          resolve({ ok: false, status, error: 'redirect' });
+          return;
+        }
+
+        if (status < 200 || status >= 300) {
+          response.resume();
+          resolve({ ok: false, status, error: 'bad-status' });
+          return;
+        }
+
+        const contentType = headers.get('content-type') || '';
+        if (!contentType.startsWith('image/')) {
+          response.resume();
+          resolve({ ok: false, status, error: 'unsupported-type' });
+          return;
+        }
+
+        const lengthHeader = headers.get('content-length');
+        if (lengthHeader) {
+          const length = Number(lengthHeader);
+          if (!Number.isNaN(length) && length > opts.maxBytes) {
+            response.resume();
+            resolve({ ok: false, status, error: 'too-large' });
+            return;
+          }
+        }
+
+        const chunks: Buffer[] = [];
+        let receivedBytes = 0;
+        let resolved = false;
+
+        response.on('data', (chunk) => {
+          if (resolved) {
+            return;
+          }
+
+          const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          receivedBytes += buffer.length;
+
+          if (receivedBytes > opts.maxBytes) {
+            resolved = true;
+            response.destroy();
+            resolve({ ok: false, status, error: 'too-large' });
+            return;
+          }
+
+          chunks.push(buffer);
+        });
+        response.on('end', () => {
+          if (resolved) {
+            return;
+          }
+
+          const buffer = Buffer.concat(chunks);
+          resolve({
+            ok: true,
+            status,
+            headers,
+            buffer: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+          });
+        });
+        response.on('error', (error) => {
+          if (!resolved) {
+            resolved = true;
+            resolve({ ok: false, status, error: String(error) });
+          }
+        });
+      }
+    );
+
+    request.on('timeout', () => {
+      request.destroy(new Error('timeout'));
+    });
+    request.on('error', (error) => {
+      resolve({ ok: false, error: error.message === 'timeout' ? 'timeout' : String(error) });
+    });
+    request.end();
+  });
 }
 
 export default fetchWithLimit;

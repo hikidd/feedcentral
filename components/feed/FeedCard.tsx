@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { decodeHtmlEntities } from '@/lib/decode-html';
 import { normalizeHttpUrl } from '@/lib/safe-url';
+import { getFeedCardImageSrc } from '@/lib/feed/feed-card-image';
 import type { FeedArticle } from '@/lib/feed/get-feed-page-data';
 import { useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -31,19 +32,19 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
   const isPriority = index < 3;
 
   const hasRemoteImage = !!article.imageUrl;
-  const proxySrc = `/api/image-proxy/${article.id}`;
+  const imageSrc = getFeedCardImageSrc(article);
 
   useEffect(() => {
     setImgError(false);
-  }, [proxySrc]);
+  }, [imageSrc]);
 
-  const shouldShowImage = hasRemoteImage && !imgError;
+  const shouldShowRemoteImage = hasRemoteImage && !imgError;
   const articleUrl = normalizeHttpUrl(article.url);
 
   return (
     <article className="group">
       <Link
-        href={`/article/${article.id}`}
+        href={`/article/${encodeURIComponent(article.id)}`}
         className={cn(
           'block rounded-xl border border-border/50 bg-card p-4 transition-all duration-150',
           'hover:border-border hover:shadow-lg hover:shadow-black/5',
@@ -52,9 +53,9 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
       >
         <div className="flex gap-4">
           <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {shouldShowImage ? (
+            {shouldShowRemoteImage ? (
               <Image
-                src={proxySrc}
+                src={imageSrc}
                 alt={article.title}
                 fill
                 onError={() => setImgError(true)}
@@ -77,7 +78,15 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
                   </button>
                 )}
               </div>
-            ) : null}
+            ) : (
+              <img
+                src={imageSrc}
+                alt=""
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading={isPriority ? 'eager' : 'lazy'}
+                fetchPriority={isPriority ? 'high' : 'low'}
+              />
+            )}
           </div>
 
           {/* Content */}
