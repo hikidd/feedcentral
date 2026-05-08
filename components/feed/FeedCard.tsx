@@ -1,15 +1,13 @@
 "use client";
 
 import { Calendar, ExternalLink } from 'lucide-react';
-import Image from 'next/image';
 import { Link } from '@/i18n-navigation';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { decodeHtmlEntities } from '@/lib/decode-html';
-import { normalizeHttpUrl } from '@/lib/safe-url';
-import { getFeedCardImageSrc } from '@/lib/feed/feed-card-image';
+import { DEFAULT_ARTICLE_IMAGE_SRC, getFeedCardImageSrc } from '@/lib/feed/feed-card-image';
 import type { FeedArticle } from '@/lib/feed/get-feed-page-data';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { getIntlLocale } from '@/lib/locale';
 
@@ -21,7 +19,7 @@ interface FeedCardProps {
 export function FeedCard({ article, index = 0 }: FeedCardProps) {
   const t = useTranslations('feed');
   const locale = useLocale();
-  const [imgError, setImgError] = useState(false);
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const formattedDate = new Date(article.publishedAt).toLocaleDateString(getIntlLocale(locale), {
     month: 'short',
     day: 'numeric',
@@ -31,15 +29,8 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
   // Priority loading for first 3 articles (above the fold)
   const isPriority = index < 3;
 
-  const hasRemoteImage = !!article.imageUrl;
   const imageSrc = getFeedCardImageSrc(article);
-
-  useEffect(() => {
-    setImgError(false);
-  }, [imageSrc]);
-
-  const shouldShowRemoteImage = hasRemoteImage && !imgError;
-  const articleUrl = normalizeHttpUrl(article.url);
+  const displayedImageSrc = failedImageSrc === imageSrc ? DEFAULT_ARTICLE_IMAGE_SRC : imageSrc;
 
   return (
     <article className="group">
@@ -53,40 +44,20 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
       >
         <div className="flex gap-4">
           <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {shouldShowRemoteImage ? (
-              <Image
-                src={imageSrc}
-                alt={article.title}
-                fill
-                onError={() => setImgError(true)}
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 768px) 128px, 128px"
-                priority={isPriority}
-                loading={isPriority ? undefined : "lazy"}
-                fetchPriority={isPriority ? "high" : "low"}
-              />
-            ) : hasRemoteImage ? (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center text-xs text-muted-foreground">
-                <div>{t('imageRemovedForSecurity')}</div>
-                {articleUrl && (
-                  <button
-                    type="button"
-                    onClick={() => window.open(articleUrl, '_blank', 'noopener')}
-                    className="mt-1 text-xs text-primary underline"
-                  >
-                    {t('openOriginalArticle')}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <img
-                src={imageSrc}
-                alt=""
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading={isPriority ? 'eager' : 'lazy'}
-                fetchPriority={isPriority ? 'high' : 'low'}
-              />
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={displayedImageSrc}
+              alt={displayedImageSrc === DEFAULT_ARTICLE_IMAGE_SRC ? '' : article.title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading={isPriority ? 'eager' : 'lazy'}
+              fetchPriority={isPriority ? 'high' : 'low'}
+              referrerPolicy="no-referrer"
+              onError={() => {
+                if (displayedImageSrc !== DEFAULT_ARTICLE_IMAGE_SRC) {
+                  setFailedImageSrc(imageSrc);
+                }
+              }}
+            />
           </div>
 
           {/* Content */}
