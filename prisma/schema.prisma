@@ -141,12 +141,13 @@ model Bookmark {
 
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   article       Article      @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  UserArticle   UserArticle? @relation(fields: [userArticleId], references: [id])
+  UserArticle   UserArticle? @relation(fields: [userArticleId], references: [id], onDelete: Cascade)
   userArticleId String?
 
   @@unique([userId, articleId])
   @@index([userId])
   @@index([articleId])
+  @@index([userArticleId])
   @@index([createdAt(sort: Desc)])
   @@map("bookmarks")
 }

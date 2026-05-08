@@ -45,7 +45,7 @@
       },
       "smartBookmarks": {
         "title": "Favoris intelligents",
-        "description": "Sauvegardez vos articles en un clic. Le contenu en favoris n'expire jamais."
+        "description": "Sauvegardez vos articles en un clic. Le contenu en favoris est conservé jusqu'à 14 jours."
       },
       "powerfulSearch": {
         "title": "Recherche puissante",
@@ -109,7 +109,7 @@
     "benefitsBanner": {
       "title": "Débloquez plus de fonctionnalités",
       "description": "Créez un compte gratuit pour sauvegarder des articles et personnaliser votre fil",
-      "bookmarks": "Sauvegardez des articles pour toujours",
+      "bookmarks": "Sauvegardez des articles 14 jours",
       "preferences": "Personnalisez votre fil",
       "createAccount": "Créer un compte",
       "signIn": "Se connecter"
@@ -162,7 +162,7 @@
       "benefits": {
         "title": "Pourquoi mettre en favoris ?",
         "retention": "Les articles non sauvegardés sont supprimés après 7 jours",
-        "preservation": "Les favoris sont conservés pour toujours",
+        "preservation": "Les favoris sont conservés jusqu'à 14 jours",
         "organization": "Gardez vos articles importants",
         "readingList": "Créez votre liste de lecture"
       },
@@ -201,8 +201,8 @@
       "description": "Créez un compte ou connectez-vous pour mettre des articles en favoris."
     },
     "warning": {
-      "title": "Les articles en favoris sont conservés",
-      "description": "Les articles non sauvegardés sont supprimés après 7 jours. Vos favoris sont conservés définitivement."
+      "title": "Les articles en favoris sont conservés temporairement",
+      "description": "Les articles sont supprimés logiquement après 7 jours, puis définitivement après 14 jours. Les favoris conservent le contexte pendant cette fenêtre de 14 jours."
     },
     "remove": "Retirer"
   },

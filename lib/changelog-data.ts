@@ -272,12 +272,12 @@ export const changelog: ChangelogEntry[] = [
       {
         type: 'feature',
         description: 'Automated article cleanup system to maintain database health',
-        details: 'Implemented a smart cleanup system that automatically removes old unbookmarked articles after 7 days (soft-delete) and permanently deletes very old articles after 14 days. Bookmarked articles are preserved forever and never deleted, ensuring your saved content is always available.',
+        details: 'Implemented a smart cleanup system that automatically soft-deletes old articles after 7 days and permanently deletes RSS articles after 14 days, including bookmarked articles.'
       },
       {
         type: 'feature',
         description: 'Complete bookmarks feature to save your favorite articles',
-        details: 'Save articles you want to read later or keep forever with a simple one-click bookmark button. Bookmarked articles are permanently preserved and will never be deleted by the automatic cleanup system. The dedicated bookmarks page provides a clean interface to manage all your saved articles.',
+        details: 'Save articles you want to read later with a simple one-click bookmark button. Bookmarked articles keep context during the 14-day retention window, and the dedicated bookmarks page provides a clean interface to manage saved articles.'
       },
       {
         type: 'feature',

@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCronApiKey } from '@/lib/env';
 
+const USER_ARTICLE_HARD_DELETE_BATCH_SIZE = 1000;
+
 /**
  * Cron endpoint for article cleanup
  * 
  * Strategy:
  * 1. Soft-delete articles older than 7 days (deletedAt timestamp)
- * 2. Hard-delete articles older than 14 days (permanent removal)
- * 3. NEVER delete bookmarked articles - preserve them with archived data
- * 
- * This prevents database saturation while maintaining user bookmarks
+ * 2. Preserve bookmarked article data during the 7-to-14-day retention window
+ * 3. Hard-delete all RSS articles older than 14 days
+ *
+ * This prevents database saturation while keeping short-term bookmark context
  */
 export async function GET(request: NextRequest) {
   try {
@@ -19,8 +21,9 @@ export async function GET(request: NextRequest) {
     const cronApiKey = getCronApiKey();
     const isDevelopment = process.env.NODE_ENV === 'development';
 
-    const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    const isAuthorized = cronApiKey && authHeader === `Bearer ${cronApiKey}`;
+    const cronSecret = process.env.CRON_SECRET;
+    const isVercelCron = !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+    const isAuthorized = !!cronApiKey && authHeader === `Bearer ${cronApiKey}`;
 
     if (!isDevelopment && !isVercelCron && !isAuthorized) {
       return NextResponse.json(
@@ -42,6 +45,7 @@ export async function GET(request: NextRequest) {
       where: {
         publishedAt: {
           lt: softDeleteCutoff,
+          gte: hardDeleteCutoff,
         },
         deletedAt: null,
         bookmarks: {
@@ -50,10 +54,6 @@ export async function GET(request: NextRequest) {
       },
       select: {
         id: true,
-        title: true,
-        description: true,
-        url: true,
-        publishedAt: true,
       },
     });
 
@@ -73,11 +73,12 @@ export async function GET(request: NextRequest) {
       softDeleted = result.count;
     }
 
-    // Step 2: Archive bookmarked articles that are old (preserve data)
+    // Step 2: Archive bookmarked articles during the 7-to-14-day retention window
     const bookmarkedOldArticles = await prisma.article.findMany({
       where: {
         publishedAt: {
           lt: softDeleteCutoff,
+          gte: hardDeleteCutoff,
         },
         deletedAt: null,
         bookmarks: {
@@ -123,14 +124,11 @@ export async function GET(request: NextRequest) {
       archived++;
     }
 
-    // Step 3: Hard-delete very old articles (14+ days, not bookmarked)
+    // Step 3: Hard-delete very old articles (14+ days)
     const hardDeleteResult = await prisma.article.deleteMany({
       where: {
         publishedAt: {
           lt: hardDeleteCutoff,
-        },
-        bookmarks: {
-          none: {},
         },
       },
     });
@@ -144,6 +142,7 @@ export async function GET(request: NextRequest) {
       where: {
         publishedAt: {
           lt: softDeleteCutoff,
+          gte: hardDeleteCutoff,
         },
         deletedAt: null,
         bookmarks: {
@@ -162,10 +161,10 @@ export async function GET(request: NextRequest) {
       userSoftDeleted = result.count;
     }
 
-    // Step U2: Mark bookmarked user articles older than soft cutoff as deleted (no archivedData field)
+    // Step U2: Mark bookmarked user articles in the 7-to-14-day retention window as deleted
     const bookmarkedOldUserArticles = await prisma.userArticle.findMany({
       where: {
-        publishedAt: { lt: softDeleteCutoff },
+        publishedAt: { lt: softDeleteCutoff, gte: hardDeleteCutoff },
         deletedAt: null,
         bookmarks: { some: {} },
       },
@@ -178,14 +177,40 @@ export async function GET(request: NextRequest) {
       userArchivedMarked++;
     }
 
-    // Step U3: Hard-delete very old user articles (14+ days, not bookmarked)
-    const userHardDeleteResult = await prisma.userArticle.deleteMany({
-      where: {
-        publishedAt: { lt: hardDeleteCutoff },
-        bookmarks: { none: {} },
-      },
-    });
-    const userHardDeleted = userHardDeleteResult.count;
+    // Step U3: Hard-delete very old user articles (14+ days)
+    let userBookmarksDeleted = 0;
+    let userHardDeleted = 0;
+
+    while (true) {
+      const userArticlesToHardDelete = await prisma.userArticle.findMany({
+        where: {
+          publishedAt: { lt: hardDeleteCutoff },
+        },
+        select: { id: true },
+        take: USER_ARTICLE_HARD_DELETE_BATCH_SIZE,
+      });
+      const userArticleIdsToHardDelete = userArticlesToHardDelete.map((article) => article.id);
+
+      if (userArticleIdsToHardDelete.length === 0) {
+        break;
+      }
+
+      const [userBookmarkDeleteResult, userHardDeleteResult] = await prisma.$transaction([
+        prisma.bookmark.deleteMany({
+          where: {
+            userArticleId: { in: userArticleIdsToHardDelete },
+          },
+        }),
+        prisma.userArticle.deleteMany({
+          where: {
+            id: { in: userArticleIdsToHardDelete },
+          },
+        }),
+      ]);
+
+      userBookmarksDeleted += userBookmarkDeleteResult.count;
+      userHardDeleted += userHardDeleteResult.count;
+    }
 
     const duration = Date.now() - startTime;
 
@@ -201,8 +226,9 @@ export async function GET(request: NextRequest) {
         // user-provided articles
         userSoftDeleted,
         userArchivedMarked,
+        userBookmarksDeleted,
         userHardDeleted,
-        total: softDeleted + archived + hardDeleted + userSoftDeleted + userArchivedMarked + userHardDeleted,
+        total: softDeleted + archived + hardDeleted + userSoftDeleted + userArchivedMarked + userBookmarksDeleted + userHardDeleted,
       },
       cutoffDates: {
         softDelete: softDeleteCutoff.toISOString(),
@@ -213,12 +239,13 @@ export async function GET(request: NextRequest) {
     console.log('[CLEANUP] Article cleanup completed:', summary);
 
     return NextResponse.json(summary);
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[CLEANUP] Error cleaning up articles:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: message,
         timestamp: new Date().toISOString(),
       },
       { status: 500 }

@@ -45,7 +45,7 @@
       },
       "smartBookmarks": {
         "title": "智能书签",
-        "description": "一键永久保存文章。已收藏内容永不过期。"
+        "description": "一键保存文章稍后阅读。已收藏内容最多保留 14 天。"
       },
       "powerfulSearch": {
         "title": "强大搜索",
@@ -109,7 +109,7 @@
     "benefitsBanner": {
       "title": "解锁更多功能",
       "description": "创建免费账户以保存书签并个性化你的信息流",
-      "bookmarks": "永久保存文章",
+      "bookmarks": "保存文章 14 天",
       "preferences": "自定义你的信息流",
       "createAccount": "创建账户",
       "signIn": "登录"
@@ -162,7 +162,7 @@
       "benefits": {
         "title": "为什么要加书签？",
         "retention": "未加书签的文章会在 7 天后自动删除",
-        "preservation": "已加书签的文章会被永久保留",
+        "preservation": "已加书签的文章最多保留 14 天",
         "organization": "跟踪重要报道",
         "readingList": "建立你的个人阅读清单"
       },
@@ -201,8 +201,8 @@
       "description": "创建账户或登录，以添加文章书签并随时访问。"
     },
     "warning": {
-      "title": "加书签后文章将被保留",
-      "description": "未加书签的文章会在 7 天后自动移除以优化存储。你已加书签的文章会被永久保存，永远不会被删除。"
+      "title": "已收藏文章会临时保留",
+      "description": "文章会在 7 天后软删除，并在 14 天后彻底删除。书签会在这 14 天窗口内保留文章上下文。"
     },
     "remove": "移除"
   },

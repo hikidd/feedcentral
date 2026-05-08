@@ -388,7 +388,7 @@ export default function PrivacyPage() {
                 <ul className="ml-6 mt-2 space-y-1 list-disc">
                   <li><strong className="text-foreground">Active accounts:</strong> Data retained while your account is active</li>
                   <li><strong className="text-foreground">Deleted accounts:</strong> Personal data permanently deleted within 30 days</li>
-                  <li><strong className="text-foreground">Articles:</strong> Soft-deleted after 7 days (unless bookmarked), hard-deleted after 14 days</li>
+                  <li><strong className="text-foreground">Articles:</strong> Soft-deleted after 7 days, hard-deleted after 14 days</li>
                   <li><strong className="text-foreground">Logs:</strong> Security logs retained for 90 days maximum</li>
                 </ul>
               </div>

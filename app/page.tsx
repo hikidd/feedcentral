@@ -171,7 +171,7 @@ export default function LandingPage() {
               {
                 icon: BookmarkCheck,
                 title: 'Smart Bookmarks',
-                description: 'Save articles permanently with one click. Bookmarked content never expires.',
+                description: 'Save articles for later with one click. Bookmarked content is kept for up to 14 days.',
               },
               {
                 icon: Search,

@@ -45,7 +45,7 @@
       },
       "smartBookmarks": {
         "title": "Smart Bookmarks",
-        "description": "Save articles permanently with one click. Bookmarked content never expires."
+        "description": "Save articles for later with one click. Bookmarked content is kept for up to 14 days."
       },
       "powerfulSearch": {
         "title": "Powerful Search",
@@ -109,7 +109,7 @@
     "benefitsBanner": {
       "title": "Unlock More Features",
       "description": "Create a free account to save bookmarks and personalize your feed",
-      "bookmarks": "Save articles forever",
+      "bookmarks": "Save articles for 14 days",
       "preferences": "Customize your feed",
       "createAccount": "Create Account",
       "signIn": "Sign In"
@@ -162,7 +162,7 @@
       "benefits": {
         "title": "Why bookmark?",
         "retention": "Unbookmarked articles are automatically deleted after 7 days",
-        "preservation": "Bookmarked articles are preserved forever",
+        "preservation": "Bookmarked articles are kept for up to 14 days",
         "organization": "Keep track of important stories",
         "readingList": "Build your personal reading list"
       },
@@ -201,8 +201,8 @@
       "description": "Create an account or sign in to bookmark articles and access them anytime."
     },
     "warning": {
-      "title": "Articles are preserved when bookmarked",
-      "description": "Unbookmarked articles are automatically removed after 7 days to optimize storage. Your bookmarked articles are permanently saved and will never be deleted."
+      "title": "Bookmarked articles are kept temporarily",
+      "description": "Articles are soft-deleted after 7 days and hard-deleted after 14 days. Bookmarks keep article context during that 14-day window."
     },
     "remove": "Remove"
   },

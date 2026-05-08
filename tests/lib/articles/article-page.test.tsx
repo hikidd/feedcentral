@@ -25,9 +25,9 @@ jest.mock('@/components/reader/BackButton', () => ({
 }));
 
 describe('ArticlePage static caching', () => {
-  it('renders article detail pages as static content with no scheduled revalidation', () => {
+  it('renders article detail pages as static content with daily revalidation', () => {
     expect(dynamic).toBe('force-static');
-    expect(revalidate).toBe(false);
+    expect(revalidate).toBe(86400);
     expect(generateStaticParams()).toEqual([]);
   });
 });
