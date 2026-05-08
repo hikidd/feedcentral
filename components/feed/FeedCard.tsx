@@ -3,16 +3,17 @@
 import { Calendar, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/i18n-navigation';
-import { Article } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { decodeHtmlEntities } from '@/lib/decode-html';
+import { normalizeHttpUrl } from '@/lib/safe-url';
+import type { FeedArticle } from '@/lib/feed/get-feed-page-data';
 import { useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { getIntlLocale } from '@/lib/locale';
 
 interface FeedCardProps {
-  article: Article;
+  article: FeedArticle;
   index?: number;
 }
 
@@ -37,6 +38,7 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
   }, [proxySrc]);
 
   const shouldShowImage = hasRemoteImage && !imgError;
+  const articleUrl = normalizeHttpUrl(article.url);
 
   return (
     <article className="group">
@@ -65,13 +67,15 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
             ) : hasRemoteImage ? (
               <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center text-xs text-muted-foreground">
                 <div>{t('imageRemovedForSecurity')}</div>
-                <button
-                  type="button"
-                  onClick={() => window.open(article.url, '_blank', 'noopener')}
-                  className="mt-1 text-xs text-primary underline"
-                >
-                  {t('openOriginalArticle')}
-                </button>
+                {articleUrl && (
+                  <button
+                    type="button"
+                    onClick={() => window.open(articleUrl, '_blank', 'noopener')}
+                    className="mt-1 text-xs text-primary underline"
+                  >
+                    {t('openOriginalArticle')}
+                  </button>
+                )}
               </div>
             ) : null}
           </div>
@@ -104,7 +108,7 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
 
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                <time dateTime={typeof article.publishedAt === 'string' ? article.publishedAt : article.publishedAt.toISOString()}>{formattedDate}</time>
+                <time dateTime={article.publishedAt}>{formattedDate}</time>
               </div>
 
               {article.author && (

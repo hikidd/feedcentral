@@ -365,22 +365,19 @@ export default function BookmarksPage() {
               <FeedCard
                 article={{
                   ...bookmark.article,
+                  publishedAt: bookmark.article.publishedAt,
                   source: {
                     id: bookmark.article.source.id,
                     name: bookmark.article.source.name,
                     url: '',
-                    feedUrl: '',
-                    category: {
-                      ...bookmark.article.category,
-                      order: 0,
-                    },
-                    logoUrl: bookmark.article.source.logoUrl || undefined,
-                    isActive: true,
-                    fetchInterval: 30,
+                    logoUrl: bookmark.article.source.logoUrl ?? null,
                   },
                   category: {
-                    ...bookmark.article.category,
-                    order: 0,
+                    id: bookmark.article.category.id,
+                    name: bookmark.article.category.name,
+                    slug: bookmark.article.category.slug,
+                    icon: null,
+                    color: null,
                   },
                 }}
                 index={index}

@@ -1,11 +1,11 @@
 'use client';
 
-import { Article } from '@/types';
 import { FeedCard } from './FeedCard';
+import type { FeedArticle } from '@/lib/feed/get-feed-page-data';
 import { useEffect, useRef, useState } from 'react';
 
 interface FeedListProps {
-  articles: Article[];
+  articles: FeedArticle[];
 }
 
 // Estimated card height: image (96px) + padding + gap
