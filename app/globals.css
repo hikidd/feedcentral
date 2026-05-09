@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-geist-mono);
   
   /* Accent color - Violet #7C5CFF */
@@ -173,10 +173,30 @@
     width: 100%;
     min-width: 100%;
     height: 100%;
+    --font-body: var(--font-roboto-flex), var(--font-noto-sans-sc), "Noto Sans SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    --font-sans: var(--font-body);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
-  
+
+  html:lang(en) h1,
+  html:lang(en) h2,
+  html:lang(en) h3,
+  html:lang(en) h4,
+  html:lang(fr) h1,
+  html:lang(fr) h2,
+  html:lang(fr) h3,
+  html:lang(fr) h4 {
+    letter-spacing: -0.025em;
+  }
+
   /* Support for reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -246,6 +266,10 @@
     -webkit-transform: translateZ(0);
   }
   
+  html:lang(cn) .tracking-tight {
+    letter-spacing: normal;
+  }
+
   /* Prevent sticky/fixed containers from creating transform contexts that break portals */
   .sticky,
   [class*="sticky"] {

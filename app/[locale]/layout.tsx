@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Noto_Sans_SC, Roboto_Flex } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/lib/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,9 +11,17 @@ import { notFound } from 'next/navigation';
 import { locales } from '@/i18n';
 import "../globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const robotoFlex = Roboto_Flex({
+  variable: "--font-roboto-flex",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const notoSansSc = Noto_Sans_SC({
+  variable: "--font-noto-sans-sc",
+  subsets: ["latin"],
+  weight: "variable",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -99,7 +107,7 @@ export default async function LocaleLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${robotoFlex.variable} ${notoSansSc.variable} ${geistMono.variable} antialiased`}
         style={{ width: '100%' }}
       >
         <NextIntlClientProvider messages={messages}>
