@@ -1,5 +1,5 @@
 import { revalidatePath } from 'next/cache';
-import { locales } from '@/i18n-config';
+import { defaultLocale, locales } from '@/i18n-config';
 import { getSiteUrl } from '@/lib/env';
 import { isValidFeedCategorySlug } from '@/lib/feed/category-slug';
 import { ensureUrlAllowed } from '@/lib/rss-fetch';
@@ -47,8 +47,8 @@ async function prewarmArticlePages(articles: FeedCacheWarmupArticle[]) {
     return;
   }
 
-  const urls = articles.flatMap((article) =>
-    locales.map((locale) => `${baseUrl}/${locale}/article/${encodeURIComponent(article.id)}`)
+  const urls = articles.map(
+    (article) => `${baseUrl}/${defaultLocale}/article/${encodeURIComponent(article.id)}`
   );
 
   const results = await Promise.allSettled(
