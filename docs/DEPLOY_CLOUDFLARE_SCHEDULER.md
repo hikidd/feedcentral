@@ -41,14 +41,14 @@ Cloudflare cron expressions are configured in UTC.
 
 Current schedules:
 
-- `0,15,30,45 0-15,22-23 * * *`
-  - Beijing time: every 15 minutes from 06:00 to 23:45
+- `0 0-15 * * *`
+  - Beijing time: hourly from 08:00 to 23:00
   - Calls `/api/cron/fetch-feeds`
-- `7,22,37,52 0-15,22-23 * * *`
-  - Beijing time: every 15 minutes from 06:07 to 23:52
+- `7 0-15 * * *`
+  - Beijing time: hourly from 08:07 to 23:07
   - Calls `/api/cron/fetch-user-sources`
-- `55 15 * * *`
-  - Beijing time: 23:55 every day
+- `55 15 * * 1`
+  - Beijing time: 23:55 every Monday
   - Calls `/api/cron/cleanup-articles`
 
 ## Setup

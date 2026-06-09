@@ -9,9 +9,9 @@ interface Env {
   CLEANUP_ARTICLES_QUERY?: string;
 }
 
-const FETCH_FEEDS_CRON = '0,15,30,45 0-15,22-23 * * *';
-const FETCH_USER_SOURCES_CRON = '7,22,37,52 0-15,22-23 * * *';
-const CLEANUP_ARTICLES_CRON = '55 15 * * *';
+const FETCH_FEEDS_CRON = '0 0-15 * * *';
+const FETCH_USER_SOURCES_CRON = '7 0-15 * * *';
+const CLEANUP_ARTICLES_CRON = '55 15 * * 1';
 
 type JobConfig = {
   name: string;
