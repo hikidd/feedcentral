@@ -41,11 +41,11 @@ Cloudflare cron expressions are configured in UTC.
 
 Current schedules:
 
-- `0 0-15 * * *`
-  - Beijing time: hourly from 08:00 to 23:00
+- `0 0-10 * * *`
+  - Beijing time: hourly from 08:00 to 18:00
   - Calls `/api/cron/fetch-feeds`
-- `7 0-15 * * *`
-  - Beijing time: hourly from 08:07 to 23:07
+- `7 0-10 * * *`
+  - Beijing time: hourly from 08:07 to 18:07
   - Calls `/api/cron/fetch-user-sources`
 - `55 15 * * 1`
   - Beijing time: 23:55 every Monday
