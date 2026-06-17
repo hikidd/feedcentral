@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AppTabs } from '@/components/layout/AppTabs';
 import { FeedList } from '@/components/feed/FeedList';
@@ -24,11 +24,96 @@ interface ArticlesResponse {
   pagination?: Omit<FeedArticlesPage, 'articles'>;
 }
 
+interface CachedFeedPage {
+  category: string | null;
+  page: number;
+  pageSize: number;
+  savedAt: number;
+  articles: FeedArticle[];
+  hasMore: boolean;
+  nextCursor: string | null;
+  totalPages: number | null;
+}
+
+const FEED_PAGE_CACHE_TTL = 5 * 60 * 1000;
+
 function getRequestedPage(): number {
   const page = new URL(window.location.href).searchParams.get('page');
   const parsed = page ? Number(page) : NaN;
 
   return Number.isSafeInteger(parsed) && parsed > 1 ? parsed : 1;
+}
+
+function getFeedPageCacheKey(category: string | null | undefined, page: number, pageSize: number): string {
+  return `feed-page:${window.location.pathname}:${category ?? 'all'}:${pageSize}:${page}`;
+}
+
+function readCachedFeedPage(category: string | null | undefined, page: number, pageSize: number): CachedFeedPage | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const rawValue = sessionStorage.getItem(getFeedPageCacheKey(category, page, pageSize));
+
+    if (!rawValue) {
+      return null;
+    }
+
+    const cached = JSON.parse(rawValue) as Partial<CachedFeedPage>;
+    const savedAt = Number(cached.savedAt);
+
+    if (
+      cached.category !== (category ?? null) ||
+      cached.page !== page ||
+      cached.pageSize !== pageSize ||
+      !Number.isFinite(savedAt) ||
+      Date.now() - savedAt > FEED_PAGE_CACHE_TTL ||
+      !Array.isArray(cached.articles) ||
+      typeof cached.hasMore !== 'boolean'
+    ) {
+      return null;
+    }
+
+    return {
+      category: category ?? null,
+      page,
+      pageSize,
+      savedAt,
+      articles: cached.articles,
+      hasMore: cached.hasMore,
+      nextCursor: typeof cached.nextCursor === 'string' ? cached.nextCursor : null,
+      totalPages: typeof cached.totalPages === 'number' ? cached.totalPages : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedFeedPage(
+  category: string | null | undefined,
+  page: number,
+  pageSize: number,
+  data: Pick<CachedFeedPage, 'articles' | 'hasMore' | 'nextCursor' | 'totalPages'>
+) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    sessionStorage.setItem(
+      getFeedPageCacheKey(category, page, pageSize),
+      JSON.stringify({
+        category: category ?? null,
+        page,
+        pageSize,
+        savedAt: Date.now(),
+        ...data,
+      })
+    );
+  } catch {
+    return;
+  }
 }
 
 export function FeedPageClient({
@@ -48,30 +133,23 @@ export function FeedPageClient({
   const [totalPages, setTotalPages] = useState<number | null>(initialArticlesPage.totalPages);
   const [jumpPage, setJumpPage] = useState('');
 
+  const articlesRef = useRef(initialArticlesPage.articles);
+
   useEffect(() => {
-    const requestedPage = getRequestedPage();
+    articlesRef.current = articles;
+  }, [articles]);
 
-    setArticles(initialArticlesPage.articles);
-    setPage(1);
-    setHasMore(initialArticlesPage.hasNext);
-    setNextCursor(initialArticlesPage.nextCursor);
-    setTotalPages(initialArticlesPage.totalPages);
-    setJumpPage('');
-
-    if (requestedPage > 1) {
-      void fetchArticles({ pageNum: requestedPage, append: false });
-    }
-  }, [category, initialArticlesPage]);
-
-  async function fetchArticles({
+  const fetchArticles = useCallback(async ({
     pageNum,
     cursor,
     append,
+    scrollToTop = false,
   }: {
     pageNum: number;
     cursor?: string | null;
     append: boolean;
-  }) {
+    scrollToTop?: boolean;
+  }) => {
     setIsLoading(true);
 
     try {
@@ -91,22 +169,69 @@ export function FeedPageClient({
       const data = (await response.json()) as ArticlesResponse;
 
       if (data.success && data.data && data.pagination) {
-        setArticles((current) => (append ? [...current, ...data.data!] : data.data!));
-        setHasMore(data.pagination.hasNext ?? false);
-        setNextCursor(data.pagination.nextCursor ?? null);
-        setTotalPages(data.pagination.totalPages);
+        const nextArticles = append ? [...articlesRef.current, ...data.data] : data.data;
+        const nextHasMore = data.pagination.hasNext ?? false;
+        const nextCursorValue = data.pagination.nextCursor ?? null;
+        const nextTotalPages = data.pagination.totalPages ?? null;
+
+        articlesRef.current = nextArticles;
+        setArticles(nextArticles);
+        setHasMore(nextHasMore);
+        setNextCursor(nextCursorValue);
+        setTotalPages(nextTotalPages);
         setPage(pageNum);
+
+        writeCachedFeedPage(category, pageNum, initialArticlesPage.pageSize, {
+          articles: nextArticles,
+          hasMore: nextHasMore,
+          nextCursor: nextCursorValue,
+          totalPages: nextTotalPages,
+        });
 
         const url = new URL(window.location.href);
         url.searchParams.set('page', String(pageNum));
         window.history.replaceState(null, '', url.pathname + url.search);
+
+        if (scrollToTop) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     } catch (error) {
       console.error('Failed to fetch articles:', error);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [category, initialArticlesPage.pageSize]);
+
+  useEffect(() => {
+    const requestedPage = getRequestedPage();
+    const cachedPage = requestedPage > 1
+      ? readCachedFeedPage(category, requestedPage, initialArticlesPage.pageSize)
+      : null;
+
+    if (cachedPage) {
+      articlesRef.current = cachedPage.articles;
+      setArticles(cachedPage.articles);
+      setPage(cachedPage.page);
+      setHasMore(cachedPage.hasMore);
+      setNextCursor(cachedPage.nextCursor);
+      setTotalPages(cachedPage.totalPages);
+      setJumpPage('');
+      return;
+    }
+
+    articlesRef.current = initialArticlesPage.articles;
+    setArticles(initialArticlesPage.articles);
+    setPage(1);
+    setHasMore(initialArticlesPage.hasNext);
+    setNextCursor(initialArticlesPage.nextCursor);
+    setTotalPages(initialArticlesPage.totalPages);
+    setJumpPage('');
+
+    if (requestedPage > 1) {
+      void fetchArticles({ pageNum: requestedPage, append: false });
+    }
+  }, [category, fetchArticles, initialArticlesPage]);
 
   async function handleRefresh() {
     setIsRefreshing(true);
@@ -123,12 +248,12 @@ export function FeedPageClient({
   }
 
   function handleNextPage() {
-    void fetchArticles({ pageNum: page + 1, cursor: nextCursor, append: false });
+    void fetchArticles({ pageNum: page + 1, cursor: nextCursor, append: false, scrollToTop: true });
   }
 
   function handlePrevPage() {
     if (page > 1) {
-      void fetchArticles({ pageNum: page - 1, append: false });
+      void fetchArticles({ pageNum: page - 1, append: false, scrollToTop: true });
     }
   }
 
@@ -147,7 +272,7 @@ export function FeedPageClient({
       return;
     }
 
-    void fetchArticles({ pageNum: requestedPage, append: false });
+    void fetchArticles({ pageNum: requestedPage, append: false, scrollToTop: true });
     setJumpPage('');
   }
 
