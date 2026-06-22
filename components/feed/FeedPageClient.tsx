@@ -189,7 +189,11 @@ export function FeedPageClient({
         });
 
         const url = new URL(window.location.href);
-        url.searchParams.set('page', String(pageNum));
+        if (pageNum > 1) {
+          url.searchParams.set('page', String(pageNum));
+        } else {
+          url.searchParams.delete('page');
+        }
         window.history.replaceState(null, '', url.pathname + url.search);
 
         if (scrollToTop) {
@@ -205,9 +209,7 @@ export function FeedPageClient({
 
   useEffect(() => {
     const requestedPage = getRequestedPage();
-    const cachedPage = requestedPage > 1
-      ? readCachedFeedPage(category, requestedPage, initialArticlesPage.pageSize)
-      : null;
+    const cachedPage = readCachedFeedPage(category, requestedPage, initialArticlesPage.pageSize);
 
     if (cachedPage) {
       articlesRef.current = cachedPage.articles;
@@ -227,6 +229,13 @@ export function FeedPageClient({
     setNextCursor(initialArticlesPage.nextCursor);
     setTotalPages(initialArticlesPage.totalPages);
     setJumpPage('');
+
+    writeCachedFeedPage(category, 1, initialArticlesPage.pageSize, {
+      articles: initialArticlesPage.articles,
+      hasMore: initialArticlesPage.hasNext,
+      nextCursor: initialArticlesPage.nextCursor,
+      totalPages: initialArticlesPage.totalPages,
+    });
 
     if (requestedPage > 1) {
       void fetchArticles({ pageNum: requestedPage, append: false });
@@ -255,6 +264,15 @@ export function FeedPageClient({
     if (page > 1) {
       void fetchArticles({ pageNum: page - 1, append: false, scrollToTop: true });
     }
+  }
+
+  function handleFirstPage() {
+    if (page === 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    void fetchArticles({ pageNum: 1, append: false, scrollToTop: true });
   }
 
   function handleLoadMore() {
@@ -307,7 +325,11 @@ export function FeedPageClient({
             <FeedList articles={articles} />
 
             {mode === 'all' ? (
-              <div className="mt-6 flex items-center justify-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <Button variant="outline" size="sm" onClick={handleFirstPage} disabled={isLoading}>
+                  {t('common.firstPage')}
+                </Button>
+
                 <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={isLoading || page === 1}>
                   {t('common.prev') || 'Prev'}
                 </Button>
