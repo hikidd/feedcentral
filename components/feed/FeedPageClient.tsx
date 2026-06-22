@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { AppTabs } from '@/components/layout/AppTabs';
 import { FeedList } from '@/components/feed/FeedList';
@@ -306,7 +307,23 @@ export function FeedPageClient({
 
   return (
     <div style={{ width: '100%' }}>
-      <AppTabs tabs={tabs} />
+      <AppTabs
+        tabs={tabs}
+        activeTabAction={(
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+            aria-label={t('common.refresh')}
+            title={t('common.refresh')}
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', isRefreshing && 'animate-spin')} />
+          </Button>
+        )}
+      />
 
       <div className="content-container px-4 py-6 sm:px-6">
         {mode === 'category' && (
