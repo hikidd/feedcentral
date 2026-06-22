@@ -309,7 +309,7 @@ export function FeedPageClient({
     <div style={{ width: '100%' }}>
       <AppTabs
         tabs={tabs}
-        activeTabAction={(
+        trailingAction={(
           <Button
             type="button"
             variant="ghost"

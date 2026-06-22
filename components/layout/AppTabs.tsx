@@ -15,10 +15,10 @@ interface Tab {
 
 interface AppTabsProps {
   tabs: Tab[];
-  activeTabAction?: ReactNode;
+  trailingAction?: ReactNode;
 }
 
-export function AppTabs({ tabs, activeTabAction }: AppTabsProps) {
+export function AppTabs({ tabs, trailingAction }: AppTabsProps) {
   const pathname = usePathname();
 
   const getCurrentTab = () => {
@@ -46,20 +46,16 @@ export function AppTabs({ tabs, activeTabAction }: AppTabsProps) {
             const isActive = activeTab === tab.value;
 
             return (
-              <div key={tab.value} className="relative flex h-12 items-center gap-1 whitespace-nowrap">
-                <Link
-                  href={tab.href}
-                  className={cn(
-                    'flex h-full items-center text-sm font-medium transition-colors',
-                    'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    isActive ? 'text-foreground' : 'text-muted-foreground'
-                  )}
-                >
-                  {tab.label}
-                </Link>
-
-                {isActive && activeTabAction}
-
+              <Link
+                key={tab.value}
+                href={tab.href}
+                className={cn(
+                  'relative flex h-12 items-center whitespace-nowrap text-sm font-medium transition-colors',
+                  'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  isActive ? 'text-foreground' : 'text-muted-foreground'
+                )}
+              >
+                {tab.label}
                 {isActive && (
                   <motion.div
                     layoutId="app-tabs-indicator"
@@ -71,9 +67,15 @@ export function AppTabs({ tabs, activeTabAction }: AppTabsProps) {
                     }}
                   />
                 )}
-              </div>
+              </Link>
             );
           })}
+
+          {trailingAction && (
+            <div className="flex h-12 shrink-0 items-center whitespace-nowrap">
+              {trailingAction}
+            </div>
+          )}
         </nav>
       </div>
     </div>
