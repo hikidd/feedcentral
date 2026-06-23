@@ -4,7 +4,10 @@ import { getPublicArticles, type PublicArticlesPage } from '@/lib/articles/get-p
 import type { PublicArticle } from '@/lib/articles/article-query';
 import { isValidFeedCategorySlug } from '@/lib/feed/category-slug';
 
-const DEFAULT_PAGE_SIZE = 20;
+export const FEED_PAGE_SIZE = 20;
+export const FIRST_FEED_PAGE = 1;
+export const MIN_STATIC_FEED_PAGE = 2;
+export const MAX_STATIC_FEED_PAGE = 10;
 
 export interface FeedCategory {
   id: string;
@@ -52,8 +55,18 @@ export interface FeedCategoryStaticParam {
   category: string;
 }
 
+export interface FeedPageStaticParam {
+  page: string;
+}
+
+export interface FeedCategoryPageStaticParam {
+  category: string;
+  page: string;
+}
+
 interface GetFeedPageDataInput {
   category?: string | null;
+  page?: number | null;
 }
 
 function serializeFeedArticle(article: PublicArticle): FeedArticle {
@@ -77,11 +90,11 @@ function serializeArticlesPage(articlesPage: PublicArticlesPage): FeedArticlesPa
   };
 }
 
-function emptyArticlesPage(): FeedArticlesPage {
+function emptyArticlesPage(page: number | null = null): FeedArticlesPage {
   return {
     articles: [],
-    page: null,
-    pageSize: DEFAULT_PAGE_SIZE,
+    page,
+    pageSize: FEED_PAGE_SIZE,
     total: null,
     totalPages: null,
     hasNext: false,
@@ -98,6 +111,33 @@ function normalizeCategory(category: string | null | undefined): string | null {
   }
 
   return isValidFeedCategorySlug(category) ? category : null;
+}
+
+function normalizeFeedPage(page: number | null | undefined): number {
+  if (!Number.isSafeInteger(page) || page == null || page < FIRST_FEED_PAGE) {
+    return FIRST_FEED_PAGE;
+  }
+
+  return page;
+}
+
+export function getStaticFeedPageNumbers(): number[] {
+  return Array.from(
+    { length: MAX_STATIC_FEED_PAGE - MIN_STATIC_FEED_PAGE + 1 },
+    (_, index) => MIN_STATIC_FEED_PAGE + index
+  );
+}
+
+export function normalizeStaticFeedPageParam(page: string): number | null {
+  if (!/^\d+$/.test(page)) {
+    return null;
+  }
+
+  const parsed = Number(page);
+
+  return Number.isSafeInteger(parsed) && parsed >= MIN_STATIC_FEED_PAGE && parsed <= MAX_STATIC_FEED_PAGE
+    ? parsed
+    : null;
 }
 
 function shouldReturnEmptyPageWithoutDatabase(): boolean {
@@ -155,12 +195,26 @@ export async function getFeedCategoryStaticParams(): Promise<FeedCategoryStaticP
     .map((category) => ({ category: category.slug }));
 }
 
+export function getFeedPageStaticParams(): FeedPageStaticParam[] {
+  return getStaticFeedPageNumbers().map((page) => ({ page: String(page) }));
+}
+
+export async function getFeedCategoryPageStaticParams(): Promise<FeedCategoryPageStaticParam[]> {
+  const categories = await getFeedCategoryStaticParams();
+
+  return categories.flatMap(({ category }) => (
+    getStaticFeedPageNumbers().map((page) => ({ category, page: String(page) }))
+  ));
+}
+
 export async function getFeedPageData(input: GetFeedPageDataInput = {}): Promise<FeedPageData> {
+  const page = normalizeFeedPage(input.page);
+
   if (!canReadFeedDatabase()) {
     return {
       categories: [],
       activeCategory: null,
-      articlesPage: emptyArticlesPage(),
+      articlesPage: emptyArticlesPage(page),
     };
   }
 
@@ -168,12 +222,12 @@ export async function getFeedPageData(input: GetFeedPageDataInput = {}): Promise
   const categoriesPromise = getFeedCategories();
   const articlesPagePromise = input.category && !category
     ? Promise.resolve(null)
-    : getPublicArticles({ category, pageSize: DEFAULT_PAGE_SIZE });
+    : getPublicArticles({ category, page, pageSize: FEED_PAGE_SIZE });
   const [categories, articlesPage] = await Promise.all([categoriesPromise, articlesPagePromise]);
 
   return {
     categories,
     activeCategory: category ? categories.find((item) => item.slug === category) ?? null : null,
-    articlesPage: articlesPage ? serializeArticlesPage(articlesPage) : emptyArticlesPage(),
+    articlesPage: articlesPage ? serializeArticlesPage(articlesPage) : emptyArticlesPage(page),
   };
 }

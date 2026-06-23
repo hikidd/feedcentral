@@ -7,6 +7,7 @@ const MAX_PREWARM_ARTICLES = 20;
 const PREWARM_TIMEOUT_MS = 5000;
 const FEED_CACHE_LOCALE = 'cn';
 const FEED_ROOT_PATH = `/${FEED_CACHE_LOCALE}/app`;
+const STATIC_FEED_PAGES = Array.from({ length: 9 }, (_, index) => index + 2);
 
 export interface FeedCacheWarmupArticle {
   id: string;
@@ -38,8 +39,15 @@ function getFeedPaths(articles: FeedCacheWarmupArticle[]) {
   );
 
   return [
-    FEED_ROOT_PATH,
-    ...categorySlugs.map((slug) => `${FEED_ROOT_PATH}/${encodeURIComponent(slug)}`),
+    ...getPaginatedFeedPaths(FEED_ROOT_PATH),
+    ...categorySlugs.flatMap((slug) => getPaginatedFeedPaths(`${FEED_ROOT_PATH}/${encodeURIComponent(slug)}`)),
+  ];
+}
+
+function getPaginatedFeedPaths(basePath: string) {
+  return [
+    basePath,
+    ...STATIC_FEED_PAGES.map((page) => `${basePath}/page/${page}`),
   ];
 }
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n-navigation';
 import { AppTabs } from '@/components/layout/AppTabs';
 import { FeedList } from '@/components/feed/FeedList';
 import { EmptyState } from '@/components/feed/EmptyState';
@@ -37,12 +38,34 @@ interface CachedFeedPage {
 }
 
 const FEED_PAGE_CACHE_TTL = 5 * 60 * 1000;
+const MAX_STATIC_FEED_PAGE = 10;
+
+function parseFeedPage(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isSafeInteger(parsed) && parsed > 1 ? parsed : null;
+}
 
 function getRequestedPage(): number {
-  const page = new URL(window.location.href).searchParams.get('page');
-  const parsed = page ? Number(page) : NaN;
+  const pathPage = parseFeedPage(window.location.pathname.match(/\/page\/(\d+)\/?$/)?.[1] ?? null);
 
-  return Number.isSafeInteger(parsed) && parsed > 1 ? parsed : 1;
+  if (pathPage) {
+    return pathPage;
+  }
+
+  return parseFeedPage(new URL(window.location.href).searchParams.get('page')) ?? 1;
+}
+
+function getFeedPathForPage(mode: 'all' | 'category', category: string | null | undefined, pageNum: number): string {
+  const basePath = mode === 'category' && category
+    ? `/app/${encodeURIComponent(category)}`
+    : '/app';
+
+  return pageNum > 1 ? `${basePath}/page/${pageNum}` : basePath;
 }
 
 function getFeedPageCacheKey(category: string | null | undefined, page: number, pageSize: number): string {
@@ -125,10 +148,12 @@ export function FeedPageClient({
   initialArticlesPage,
 }: FeedPageClientProps) {
   const t = useTranslations();
+  const router = useRouter();
+  const initialPage = initialArticlesPage.page ?? 1;
   const [articles, setArticles] = useState(initialArticlesPage.articles);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [hasMore, setHasMore] = useState(initialArticlesPage.hasNext);
   const [nextCursor, setNextCursor] = useState(initialArticlesPage.nextCursor);
   const [totalPages, setTotalPages] = useState<number | null>(initialArticlesPage.totalPages);
@@ -210,7 +235,10 @@ export function FeedPageClient({
 
   useEffect(() => {
     const requestedPage = getRequestedPage();
-    const cachedPage = readCachedFeedPage(category, requestedPage, initialArticlesPage.pageSize);
+    const serverPage = initialArticlesPage.page ?? 1;
+    const cachedPage = requestedPage === serverPage
+      ? null
+      : readCachedFeedPage(category, requestedPage, initialArticlesPage.pageSize);
 
     if (cachedPage) {
       articlesRef.current = cachedPage.articles;
@@ -225,23 +253,32 @@ export function FeedPageClient({
 
     articlesRef.current = initialArticlesPage.articles;
     setArticles(initialArticlesPage.articles);
-    setPage(1);
+    setPage(serverPage);
     setHasMore(initialArticlesPage.hasNext);
     setNextCursor(initialArticlesPage.nextCursor);
     setTotalPages(initialArticlesPage.totalPages);
     setJumpPage('');
 
-    writeCachedFeedPage(category, 1, initialArticlesPage.pageSize, {
+    writeCachedFeedPage(category, serverPage, initialArticlesPage.pageSize, {
       articles: initialArticlesPage.articles,
       hasMore: initialArticlesPage.hasNext,
       nextCursor: initialArticlesPage.nextCursor,
       totalPages: initialArticlesPage.totalPages,
     });
 
-    if (requestedPage > 1) {
+    if (requestedPage > 1 && requestedPage !== serverPage) {
       void fetchArticles({ pageNum: requestedPage, append: false });
     }
   }, [category, fetchArticles, initialArticlesPage]);
+
+  function navigateToFeedPage(pageNum: number): boolean {
+    if (pageNum < 1 || pageNum > MAX_STATIC_FEED_PAGE) {
+      return false;
+    }
+
+    router.push(getFeedPathForPage(mode, category, pageNum));
+    return true;
+  }
 
   async function handleRefresh() {
     setIsRefreshing(true);
@@ -249,7 +286,12 @@ export function FeedPageClient({
     try {
       await fetch('/api/cron/fetch-feeds', { method: 'POST' });
       window.setTimeout(() => {
-        void fetchArticles({ pageNum: 1, append: false }).finally(() => setIsRefreshing(false));
+        if (page === 1) {
+          router.refresh();
+        } else {
+          navigateToFeedPage(1);
+        }
+        setIsRefreshing(false);
       }, 2000);
     } catch (error) {
       console.error('Failed to refresh feeds:', error);
@@ -258,13 +300,27 @@ export function FeedPageClient({
   }
 
   function handleNextPage() {
-    void fetchArticles({ pageNum: page + 1, cursor: nextCursor, append: false, scrollToTop: true });
+    const nextPage = page + 1;
+
+    if (navigateToFeedPage(nextPage)) {
+      return;
+    }
+
+    void fetchArticles({ pageNum: nextPage, cursor: nextCursor, append: false, scrollToTop: true });
   }
 
   function handlePrevPage() {
-    if (page > 1) {
-      void fetchArticles({ pageNum: page - 1, append: false, scrollToTop: true });
+    if (page <= 1) {
+      return;
     }
+
+    const previousPage = page - 1;
+
+    if (navigateToFeedPage(previousPage)) {
+      return;
+    }
+
+    void fetchArticles({ pageNum: previousPage, append: false, scrollToTop: true });
   }
 
   function handleFirstPage() {
@@ -273,11 +329,21 @@ export function FeedPageClient({
       return;
     }
 
+    if (navigateToFeedPage(1)) {
+      return;
+    }
+
     void fetchArticles({ pageNum: 1, append: false, scrollToTop: true });
   }
 
   function handleLoadMore() {
-    void fetchArticles({ pageNum: page + 1, cursor: nextCursor, append: true });
+    const nextPage = page + 1;
+
+    if (navigateToFeedPage(nextPage)) {
+      return;
+    }
+
+    void fetchArticles({ pageNum: nextPage, cursor: nextCursor, append: true });
   }
 
   function handleJumpToPage() {
@@ -288,6 +354,11 @@ export function FeedPageClient({
     }
 
     if (totalPages && requestedPage > totalPages) {
+      return;
+    }
+
+    if (navigateToFeedPage(requestedPage)) {
+      setJumpPage('');
       return;
     }
 
