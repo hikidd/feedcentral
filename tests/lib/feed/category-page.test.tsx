@@ -1,4 +1,4 @@
-import CategoryPage, { dynamicParams, generateStaticParams } from '@/app/[locale]/app/[category]/page';
+import CategoryPage, { dynamicParams, generateStaticParams, revalidate } from '@/app/[locale]/app/[category]/page';
 import { FeedPageClient } from '@/components/feed/FeedPageClient';
 import { getFeedCategoryStaticParams, getFeedPageData } from '@/lib/feed/get-feed-page-data';
 import { notFound } from 'next/navigation';
@@ -48,6 +48,10 @@ describe('CategoryPage', () => {
 
   it('disables on-demand category params', () => {
     expect(dynamicParams).toBe(false);
+  });
+
+  it('does not time-revalidate category pages', () => {
+    expect(revalidate).toBe(false);
   });
 
   it('generates static params from known feed categories', async () => {

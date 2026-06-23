@@ -1,11 +1,12 @@
 import { revalidatePath } from 'next/cache';
-import { defaultLocale, locales } from '@/i18n-config';
 import { getSiteUrl } from '@/lib/env';
 import { isValidFeedCategorySlug } from '@/lib/feed/category-slug';
 import { ensureUrlAllowed } from '@/lib/rss-fetch';
 
 const MAX_PREWARM_ARTICLES = 20;
 const PREWARM_TIMEOUT_MS = 5000;
+const FEED_CACHE_LOCALE = 'cn';
+const FEED_ROOT_PATH = `/${FEED_CACHE_LOCALE}/app`;
 
 export interface FeedCacheWarmupArticle {
   id: string;
@@ -19,40 +20,46 @@ export async function refreshFeedCacheForArticles(articles: FeedCacheWarmupArtic
     return;
   }
 
-  revalidateFeedPaths(articles);
-  await prewarmArticlePages(articles.slice(0, MAX_PREWARM_ARTICLES));
+  const feedPaths = getFeedPaths(articles);
+
+  for (const path of feedPaths) {
+    revalidatePath(path);
+  }
+
+  await prewarmPaths([
+    ...feedPaths,
+    ...getArticlePaths(articles.slice(0, MAX_PREWARM_ARTICLES)),
+  ]);
 }
 
-function revalidateFeedPaths(articles: FeedCacheWarmupArticle[]) {
+function getFeedPaths(articles: FeedCacheWarmupArticle[]) {
   const categorySlugs = Array.from(
     new Set(articles.map((article) => article.category?.slug).filter(isValidFeedCategorySlug))
   );
 
-  for (const locale of locales) {
-    revalidatePath(`/${locale}/app`);
-
-    for (const slug of categorySlugs) {
-      revalidatePath(`/${locale}/app/${encodeURIComponent(slug)}`);
-    }
-  }
+  return [
+    FEED_ROOT_PATH,
+    ...categorySlugs.map((slug) => `${FEED_ROOT_PATH}/${encodeURIComponent(slug)}`),
+  ];
 }
 
-async function prewarmArticlePages(articles: FeedCacheWarmupArticle[]) {
+function getArticlePaths(articles: FeedCacheWarmupArticle[]) {
+  return articles.map((article) => `/${FEED_CACHE_LOCALE}/article/${encodeURIComponent(article.id)}`);
+}
+
+async function prewarmPaths(paths: string[]) {
   let baseUrl: string;
 
   try {
     baseUrl = await getPrewarmOrigin();
   } catch (error) {
-    console.warn('[RSS] Failed to prepare article page prewarm:', error);
+    console.warn('[RSS] Failed to prepare cache prewarm:', error);
     return;
   }
 
-  const urls = articles.map(
-    (article) => `${baseUrl}/${defaultLocale}/article/${encodeURIComponent(article.id)}`
-  );
-
   const results = await Promise.allSettled(
-    urls.map(async (url) => {
+    paths.map(async (path) => {
+      const url = `${baseUrl}${path}`;
       const response = await fetch(url, {
         method: 'GET',
         redirect: 'manual',
@@ -74,7 +81,7 @@ async function prewarmArticlePages(articles: FeedCacheWarmupArticle[]) {
 
   for (const result of results) {
     if (result.status === 'rejected') {
-      console.warn('[RSS] Failed to prewarm article page cache:', result.reason);
+      console.warn('[RSS] Failed to prewarm cache path:', result.reason);
     }
   }
 }

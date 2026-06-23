@@ -20,6 +20,11 @@ interface ParsedArticle {
   publishedAt: Date;
 }
 
+interface FetchAndStoreArticlesOptions {
+  refreshCache?: boolean;
+  onCreatedArticles?: (articles: FeedCacheWarmupArticle[]) => void;
+}
+
 /**
  * RSS Feed Parser
  * Fetches and normalizes RSS/Atom feeds
@@ -287,11 +292,12 @@ export class RSSFeedParser {
  * Fetch articles from a source and store in database
  * Optimized with batch inserts and reduced database round-trips
  */
-export async function fetchAndStoreArticles(source: Source): Promise<{
+export async function fetchAndStoreArticles(source: Source, options: FetchAndStoreArticlesOptions = {}): Promise<{
   found: number;
   added: number;
   error?: string;
 }> {
+  const { refreshCache = true, onCreatedArticles } = options;
   const parser = new RSSFeedParser();
   let job;
 
@@ -406,7 +412,11 @@ export async function fetchAndStoreArticles(source: Source): Promise<{
     ]);
 
     if (createdArticles.length > 0) {
-      await refreshFeedCacheForArticles(createdArticles);
+      onCreatedArticles?.(createdArticles);
+
+      if (refreshCache) {
+        await refreshFeedCacheForArticles(createdArticles);
+      }
     }
 
     return {
@@ -462,11 +472,17 @@ export async function fetchAllActiveSources(options?: {
     data?: { found: number; added: number; error?: string };
     error?: any;
   }> = [];
+  const createdArticles: FeedCacheWarmupArticle[] = [];
 
   for (let i = 0; i < sources.length; i += concurrency) {
     const batch = sources.slice(i, i + concurrency);
     const batchResults = await Promise.allSettled(
-      batch.map((source) => fetchAndStoreArticles(source))
+      batch.map((source) => fetchAndStoreArticles(source, {
+        refreshCache: false,
+        onCreatedArticles: (articles) => {
+          createdArticles.push(...articles);
+        },
+      }))
     );
 
     results.push(
@@ -480,6 +496,10 @@ export async function fetchAllActiveSources(options?: {
 
     // Log progress
     console.log(`[RSS] Completed batch ${Math.floor(i / concurrency) + 1}/${Math.ceil(sources.length / concurrency)}`);
+  }
+
+  if (createdArticles.length > 0) {
+    await refreshFeedCacheForArticles(createdArticles);
   }
 
   return results;

@@ -2,7 +2,7 @@ import { FeedPageClient } from '@/components/feed/FeedPageClient';
 import { getFeedPageData } from '@/lib/feed/get-feed-page-data';
 
 export const dynamic = 'force-static';
-export const revalidate = 120;
+export const revalidate = false;
 
 export default async function AppDashboard() {
   const data = await getFeedPageData();

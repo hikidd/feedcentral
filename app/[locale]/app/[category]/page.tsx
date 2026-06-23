@@ -4,7 +4,7 @@ import { getFeedCategoryStaticParams, getFeedPageData, isValidFeedCategorySlug }
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
-export const revalidate = 120;
+export const revalidate = false;
 
 export function generateStaticParams() {
   return getFeedCategoryStaticParams();

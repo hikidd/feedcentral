@@ -27,29 +27,32 @@ describe('refreshFeedCacheForArticles', () => {
     warnSpy.mockRestore();
   });
 
-  it('revalidates localized feed pages and prewarms default-locale article detail pages', async () => {
+  it('revalidates and prewarms cn feed, category, and article pages', async () => {
     await refreshFeedCacheForArticles([
       { id: 'carticle0000000000000000001', category: { slug: 'tech' } },
       { id: 'carticle0000000000000000002', category: { slug: 'tech' } },
     ]);
 
     expect(mockRevalidatePath.mock.calls.map(([path]) => path)).toEqual([
-      '/en/app',
-      '/en/app/tech',
-      '/fr/app',
-      '/fr/app/tech',
       '/cn/app',
       '/cn/app/tech',
     ]);
-    expect(mockRevalidatePath.mock.calls.map(([path]) => path)).not.toContain('/en/article/carticle0000000000000000001');
-    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(global.fetch).toHaveBeenCalledTimes(4);
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://feedcentral.example/cn/article/carticle0000000000000000001',
+      'https://feedcentral.example/cn/app',
       expect.objectContaining({
         method: 'GET',
         redirect: 'manual',
         signal: expect.any(AbortSignal),
       })
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://feedcentral.example/cn/app/tech',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://feedcentral.example/cn/article/carticle0000000000000000001',
+      expect.objectContaining({ method: 'GET' })
     );
     expect(global.fetch).toHaveBeenCalledWith(
       'https://feedcentral.example/cn/article/carticle0000000000000000002',
@@ -79,8 +82,6 @@ describe('refreshFeedCacheForArticles', () => {
     ]);
 
     expect(mockRevalidatePath.mock.calls.map(([path]) => path)).toEqual([
-      '/en/app',
-      '/fr/app',
       '/cn/app',
     ]);
   });
@@ -92,13 +93,15 @@ describe('refreshFeedCacheForArticles', () => {
 
     expect(global.fetch).not.toHaveBeenCalled();
     expect(warnSpy).toHaveBeenCalledWith(
-      '[RSS] Failed to prepare article page prewarm:',
+      '[RSS] Failed to prepare cache prewarm:',
       expect.any(Error)
     );
   });
 
-  it('keeps going when one article page prewarm fails', async () => {
+  it('keeps going when one prewarm request fails', async () => {
     (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: true, status: 200 })
+      .mockResolvedValueOnce({ ok: true, status: 200 })
       .mockResolvedValueOnce({ ok: false, status: 500 })
       .mockResolvedValue({ ok: true, status: 200 });
 
@@ -109,13 +112,13 @@ describe('refreshFeedCacheForArticles', () => {
       ])
     ).resolves.toBeUndefined();
 
-    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(global.fetch).toHaveBeenCalledTimes(4);
     expect(global.fetch).toHaveBeenCalledWith(
       'https://feedcentral.example/cn/article/carticle0000000000000000002',
       expect.objectContaining({ method: 'GET' })
     );
     expect(warnSpy).toHaveBeenCalledWith(
-      '[RSS] Failed to prewarm article page cache:',
+      '[RSS] Failed to prewarm cache path:',
       expect.any(Error)
     );
   });
