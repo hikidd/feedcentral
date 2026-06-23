@@ -20,10 +20,13 @@ export function FeedCard({ article, index = 0 }: FeedCardProps) {
   const t = useTranslations('feed');
   const locale = useLocale();
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
-  const formattedDate = new Date(article.publishedAt).toLocaleDateString(getIntlLocale(locale), {
+  const formattedDate = new Date(article.publishedAt).toLocaleString(getIntlLocale(locale), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   });
 
   // Priority loading for first 3 articles (above the fold)
