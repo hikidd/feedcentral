@@ -1,6 +1,5 @@
 import { revalidatePath } from 'next/cache';
 import { getSiteUrl } from '@/lib/env';
-import { isValidFeedCategorySlug } from '@/lib/feed/category-slug';
 import { ensureUrlAllowed } from '@/lib/rss-fetch';
 
 const MAX_PREWARM_ARTICLES = 20;
@@ -21,7 +20,7 @@ export async function refreshFeedCacheForArticles(articles: FeedCacheWarmupArtic
     return;
   }
 
-  const feedPaths = getFeedPaths(articles);
+  const feedPaths = getFeedPaths();
 
   for (const path of feedPaths) {
     revalidatePath(path);
@@ -33,15 +32,8 @@ export async function refreshFeedCacheForArticles(articles: FeedCacheWarmupArtic
   ]);
 }
 
-function getFeedPaths(articles: FeedCacheWarmupArticle[]) {
-  const categorySlugs = Array.from(
-    new Set(articles.map((article) => article.category?.slug).filter(isValidFeedCategorySlug))
-  );
-
-  return [
-    ...getPaginatedFeedPaths(FEED_ROOT_PATH),
-    ...categorySlugs.flatMap((slug) => getPaginatedFeedPaths(`${FEED_ROOT_PATH}/${encodeURIComponent(slug)}`)),
-  ];
+function getFeedPaths() {
+  return getPaginatedFeedPaths(FEED_ROOT_PATH);
 }
 
 function getPaginatedFeedPaths(basePath: string) {
@@ -52,7 +44,9 @@ function getPaginatedFeedPaths(basePath: string) {
 }
 
 function getArticlePaths(articles: FeedCacheWarmupArticle[]) {
-  return articles.map((article) => `/${FEED_CACHE_LOCALE}/article/${encodeURIComponent(article.id)}`);
+  return Array.from(
+    new Set(articles.map((article) => `/${FEED_CACHE_LOCALE}/article/${encodeURIComponent(article.id)}`))
+  );
 }
 
 async function prewarmPaths(paths: string[]) {

@@ -12,6 +12,10 @@ import { refreshFeedCacheForArticles } from '@/lib/feed/cache-warmup';
 
 const mockRevalidatePath = revalidatePath as jest.Mock;
 const mockGetSiteUrl = getSiteUrl as jest.Mock;
+const expectedFeedPaths = [
+  '/cn/app',
+  ...Array.from({ length: 9 }, (_, index) => `/cn/app/page/${index + 2}`),
+];
 
 describe('refreshFeedCacheForArticles', () => {
   let warnSpy: jest.SpyInstance;
@@ -27,29 +31,26 @@ describe('refreshFeedCacheForArticles', () => {
     warnSpy.mockRestore();
   });
 
-  it('revalidates and prewarms cn feed, category, and article pages', async () => {
+  it('revalidates and prewarms cn all-feed and article pages', async () => {
     await refreshFeedCacheForArticles([
       { id: 'carticle0000000000000000001', category: { slug: 'tech' } },
       { id: 'carticle0000000000000000002', category: { slug: 'tech' } },
     ]);
 
-    expect(mockRevalidatePath.mock.calls.map(([path]) => path)).toEqual([
-      '/cn/app',
-      '/cn/app/tech',
-    ]);
-    expect(global.fetch).toHaveBeenCalledTimes(4);
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://feedcentral.example/cn/app',
-      expect.objectContaining({
-        method: 'GET',
-        redirect: 'manual',
-        signal: expect.any(AbortSignal),
-      })
-    );
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://feedcentral.example/cn/app/tech',
-      expect.objectContaining({ method: 'GET' })
-    );
+    expect(mockRevalidatePath.mock.calls.map(([path]) => path)).toEqual(expectedFeedPaths);
+    expect(global.fetch).toHaveBeenCalledTimes(expectedFeedPaths.length + 2);
+
+    for (const path of expectedFeedPaths) {
+      expect(global.fetch).toHaveBeenCalledWith(
+        `https://feedcentral.example${path}`,
+        expect.objectContaining({
+          method: 'GET',
+          redirect: 'manual',
+          signal: expect.any(AbortSignal),
+        })
+      );
+    }
+
     expect(global.fetch).toHaveBeenCalledWith(
       'https://feedcentral.example/cn/article/carticle0000000000000000001',
       expect.objectContaining({ method: 'GET' })
@@ -59,11 +60,11 @@ describe('refreshFeedCacheForArticles', () => {
       expect.objectContaining({ method: 'GET' })
     );
     expect(global.fetch).not.toHaveBeenCalledWith(
-      'https://feedcentral.example/en/article/carticle0000000000000000001',
+      'https://feedcentral.example/cn/app/tech',
       expect.anything()
     );
     expect(global.fetch).not.toHaveBeenCalledWith(
-      'https://feedcentral.example/fr/article/carticle0000000000000000001',
+      'https://feedcentral.example/cn/app/tech/page/2',
       expect.anything()
     );
   });
@@ -75,15 +76,27 @@ describe('refreshFeedCacheForArticles', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it('skips invalid category slugs when revalidating feed pages', async () => {
+  it('ignores categories when revalidating feed pages', async () => {
     await refreshFeedCacheForArticles([
       { id: 'carticle0000000000000000001', category: { slug: '..' } },
-      { id: 'carticle0000000000000000002', category: { slug: 'tech/news' } },
+      { id: 'carticle0000000000000000002', category: { slug: 'tech' } },
     ]);
 
-    expect(mockRevalidatePath.mock.calls.map(([path]) => path)).toEqual([
-      '/cn/app',
+    expect(mockRevalidatePath.mock.calls.map(([path]) => path)).toEqual(expectedFeedPaths);
+  });
+
+  it('prewarms each article page once per refresh', async () => {
+    await refreshFeedCacheForArticles([
+      { id: 'carticle0000000000000000001', category: { slug: 'tech' } },
+      { id: 'carticle0000000000000000001', category: { slug: 'tech' } },
     ]);
+
+    expect(global.fetch).toHaveBeenCalledTimes(expectedFeedPaths.length + 1);
+    expect(
+      (global.fetch as jest.Mock).mock.calls.filter(
+        ([url]) => url === 'https://feedcentral.example/cn/article/carticle0000000000000000001'
+      )
+    ).toHaveLength(1);
   });
 
   it('does not prewarm when the configured site URL is invalid', async () => {
@@ -112,7 +125,7 @@ describe('refreshFeedCacheForArticles', () => {
       ])
     ).resolves.toBeUndefined();
 
-    expect(global.fetch).toHaveBeenCalledTimes(4);
+    expect(global.fetch).toHaveBeenCalledTimes(expectedFeedPaths.length + 2);
     expect(global.fetch).toHaveBeenCalledWith(
       'https://feedcentral.example/cn/article/carticle0000000000000000002',
       expect.objectContaining({ method: 'GET' })
