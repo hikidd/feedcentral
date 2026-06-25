@@ -93,6 +93,49 @@ describe('RSSFeedParser sanitizeHtml', () => {
   });
 });
 
+describe('fetchAllActiveSources active source query retry', () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('retries transient Prisma connection failures when loading sources', async () => {
+    jest.useFakeTimers();
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const connectionError = new Error("Can't reach database server at `db.example:5432`");
+    connectionError.name = 'PrismaClientInitializationError';
+    const mockPrisma = {
+      source: {
+        findMany: jest.fn()
+          .mockRejectedValueOnce(connectionError)
+          .mockResolvedValueOnce([]),
+      },
+    };
+
+    jest.doMock('@/lib/prisma', () => ({ prisma: mockPrisma }));
+    jest.doMock('@/lib/feed/cache-warmup', () => ({
+      refreshFeedCacheForArticles: jest.fn(),
+    }));
+
+    const { fetchAllActiveSources } = require('@/lib/rss-parser');
+    const resultPromise = fetchAllActiveSources({ concurrency: 1 });
+
+    await Promise.resolve();
+    await jest.advanceTimersByTimeAsync(500);
+
+    await expect(resultPromise).resolves.toEqual([]);
+    expect(mockPrisma.source.findMany).toHaveBeenCalledTimes(2);
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[RSS] Failed to query active sources, retrying in 500ms:',
+      connectionError
+    );
+  });
+});
+
 describe('fetchAndStoreArticles cache warmup', () => {
   beforeEach(() => {
     jest.resetModules();

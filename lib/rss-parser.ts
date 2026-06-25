@@ -25,6 +25,47 @@ interface FetchAndStoreArticlesOptions {
   onCreatedArticles?: (articles: FeedCacheWarmupArticle[]) => void;
 }
 
+const ACTIVE_SOURCE_QUERY_RETRY_DELAYS_MS = [500, 1500];
+
+function isRetryablePrismaConnectionError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.name === 'PrismaClientInitializationError'
+    || error.message.includes("Can't reach database server")
+    || error.message.includes('Timed out fetching a new connection')
+  );
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function findActiveSources(sourceIds?: string[]) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await prisma.source.findMany({
+        where: {
+          isActive: true,
+          ...(sourceIds && { id: { in: sourceIds } }),
+        },
+        include: { category: true },
+      });
+    } catch (error) {
+      const delayMs = ACTIVE_SOURCE_QUERY_RETRY_DELAYS_MS[attempt];
+
+      if (delayMs == null || !isRetryablePrismaConnectionError(error)) {
+        throw error;
+      }
+
+      console.warn(`[RSS] Failed to query active sources, retrying in ${delayMs}ms:`, error);
+      await wait(delayMs);
+    }
+  }
+}
+
 /**
  * RSS Feed Parser
  * Fetches and normalizes RSS/Atom feeds
@@ -455,13 +496,7 @@ export async function fetchAllActiveSources(options?: {
   const { concurrency = 5, sourceIds } = options || {};
 
   // Fetch active sources
-  const sources = await prisma.source.findMany({
-    where: {
-      isActive: true,
-      ...(sourceIds && { id: { in: sourceIds } }),
-    },
-    include: { category: true },
-  });
+  const sources = await findActiveSources(sourceIds);
 
   console.log(`[RSS] Fetching ${sources.length} sources with concurrency ${concurrency}`);
 

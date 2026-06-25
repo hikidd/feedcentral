@@ -4,6 +4,7 @@ import { ensureUrlAllowed } from '@/lib/rss-fetch';
 
 const MAX_PREWARM_ARTICLES = 20;
 const PREWARM_TIMEOUT_MS = 5000;
+const PREWARM_CONCURRENCY = 2;
 const FEED_CACHE_LOCALE = 'cn';
 const FEED_ROOT_PATH = `/${FEED_CACHE_LOCALE}/app`;
 const STATIC_FEED_PAGES = Array.from({ length: 9 }, (_, index) => index + 2);
@@ -59,32 +60,35 @@ async function prewarmPaths(paths: string[]) {
     return;
   }
 
-  const results = await Promise.allSettled(
-    paths.map(async (path) => {
-      const url = `${baseUrl}${path}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        redirect: 'manual',
-        signal: AbortSignal.timeout(PREWARM_TIMEOUT_MS),
-        headers: {
-          'x-feedcentral-cache-prewarm': '1',
-        },
-      });
+  for (let i = 0; i < paths.length; i += PREWARM_CONCURRENCY) {
+    const batch = paths.slice(i, i + PREWARM_CONCURRENCY);
+    const results = await Promise.allSettled(batch.map((path) => prewarmPath(baseUrl, path)));
 
-      if (response.status >= 300 && response.status < 400) {
-        throw new Error(`Prewarm redirect rejected for ${url}: ${response.status}`);
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        console.warn('[RSS] Failed to prewarm cache path:', result.reason);
       }
-
-      if (!response.ok) {
-        throw new Error(`Prewarm failed for ${url}: ${response.status}`);
-      }
-    })
-  );
-
-  for (const result of results) {
-    if (result.status === 'rejected') {
-      console.warn('[RSS] Failed to prewarm cache path:', result.reason);
     }
+  }
+}
+
+async function prewarmPath(baseUrl: string, path: string) {
+  const url = `${baseUrl}${path}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    redirect: 'manual',
+    signal: AbortSignal.timeout(PREWARM_TIMEOUT_MS),
+    headers: {
+      'x-feedcentral-cache-prewarm': '1',
+    },
+  });
+
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error(`Prewarm redirect rejected for ${url}: ${response.status}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`Prewarm failed for ${url}: ${response.status}`);
   }
 }
 

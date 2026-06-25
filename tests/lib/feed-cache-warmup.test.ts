@@ -76,6 +76,40 @@ describe('refreshFeedCacheForArticles', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
+  it('limits cache prewarm requests to two at a time', async () => {
+    const pending: Array<() => void> = [];
+    const response = { ok: true, status: 200 };
+    const expectedRequests = expectedFeedPaths.length + 2;
+
+    (global.fetch as jest.Mock).mockImplementation(() => new Promise((resolve) => {
+      pending.push(() => resolve(response));
+    }));
+
+    const task = refreshFeedCacheForArticles([
+      { id: 'carticle0000000000000000001', category: { slug: 'tech' } },
+      { id: 'carticle0000000000000000002', category: { slug: 'tech' } },
+    ]);
+
+    await Promise.resolve();
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+
+    const settlePendingBatch = async () => {
+      const resolvers = pending.splice(0);
+      resolvers.forEach((resolve) => resolve());
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    while ((global.fetch as jest.Mock).mock.calls.length < expectedRequests) {
+      await settlePendingBatch();
+    }
+
+    await settlePendingBatch();
+    await task;
+
+    expect(global.fetch).toHaveBeenCalledTimes(expectedRequests);
+  });
+
   it('ignores categories when revalidating feed pages', async () => {
     await refreshFeedCacheForArticles([
       { id: 'carticle0000000000000000001', category: { slug: '..' } },
