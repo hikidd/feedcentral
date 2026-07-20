@@ -7,7 +7,9 @@ const PREWARM_TIMEOUT_MS = 5000;
 const PREWARM_CONCURRENCY = 2;
 const FEED_CACHE_LOCALE = 'cn';
 const FEED_ROOT_PATH = `/${FEED_CACHE_LOCALE}/app`;
-const STATIC_FEED_PAGES = Array.from({ length: 9 }, (_, index) => index + 2);
+// Prewarm the first three feed pages only: the landing page plus pages 2 and 3.
+// Deeper pages are generated on demand to keep ISR write usage bounded.
+const STATIC_FEED_PAGES = Array.from({ length: 2 }, (_, index) => index + 2);
 
 export interface FeedCacheWarmupArticle {
   id: string;

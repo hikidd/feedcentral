@@ -14,7 +14,7 @@ const mockRevalidatePath = revalidatePath as jest.Mock;
 const mockGetSiteUrl = getSiteUrl as jest.Mock;
 const expectedFeedPaths = [
   '/cn/app',
-  ...Array.from({ length: 9 }, (_, index) => `/cn/app/page/${index + 2}`),
+  ...Array.from({ length: 2 }, (_, index) => `/cn/app/page/${index + 2}`),
 ];
 
 describe('refreshFeedCacheForArticles', () => {
