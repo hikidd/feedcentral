@@ -2,8 +2,9 @@
 
 ## Production scheduler
 
-Use the Cloudflare Worker in `cloudflare/scheduler/`. It has one hourly daytime
-schedule and calls the unified endpoint:
+Use the Cloudflare Worker in `cloudflare/scheduler/`. It has one hourly schedule
+from 08:00 to 23:00 Beijing time (`0 0-15 * * *` in UTC) and calls the unified
+endpoint:
 
 ```text
 POST https://kidd.one/api/cron/run-all

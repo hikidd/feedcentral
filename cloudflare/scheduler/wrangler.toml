@@ -9,5 +9,5 @@ RUN_ALL_QUERY = ""
 
 [triggers]
 crons = [
-  "0 0-10 * * *"
+  "0 0-15 * * *"
 ]

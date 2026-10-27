@@ -5,7 +5,8 @@ interface Env {
   RUN_ALL_QUERY?: string;
 }
 
-const RUN_ALL_CRON = '0 0-10 * * *';
+// UTC 00:00-15:00 = Beijing 08:00-23:00, hourly.
+const RUN_ALL_CRON = '0 0-15 * * *';
 
 type JobConfig = {
   name: string;

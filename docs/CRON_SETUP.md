@@ -23,10 +23,10 @@ Authorization: Bearer YOUR_CRON_API_KEY
 The Worker configuration is in `cloudflare/scheduler/` and has one schedule:
 
 ```text
-0 0-10 * * *
+0 0-15 * * *
 ```
 
-This runs hourly from 00:00 through 10:00 UTC (08:00 through 18:00 Beijing time).
+This runs hourly from 00:00 through 15:00 UTC (08:00 through 23:00 Beijing time).
 The application decides when to run the weekly cleanup; no second cleanup timer is
 needed.
 

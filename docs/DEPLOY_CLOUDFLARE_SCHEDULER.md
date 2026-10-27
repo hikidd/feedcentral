@@ -44,9 +44,9 @@ Cloudflare cron expressions are configured in UTC.
 
 Current schedule:
 
-- `0 0-10 * * *`
-  - Runs hourly from 00:00 through 10:00 UTC.
-  - Beijing time: 08:00 through 18:00.
+- `0 0-15 * * *`
+  - Runs hourly from 00:00 through 15:00 UTC.
+  - Beijing time: 08:00 through 23:00.
   - Calls `/api/cron/run-all` once per hour.
 
 The application runs weekly cleanup when the scheduled request arrives on Monday at 00:00 UTC (Monday 08:00 Beijing time). The endpoint also supports `?forceCleanup=true` for an authenticated manual verification.

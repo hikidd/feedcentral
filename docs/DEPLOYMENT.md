@@ -95,7 +95,7 @@ Or create a one-time deployment script in Vercel dashboard.
 ### 6. Deploy the unified Cloudflare scheduler
 
 Automatic jobs are handled by the standalone Worker in `cloudflare/scheduler/`.
-It makes one hourly daytime request to:
+It makes one hourly request from 08:00 to 23:00 Beijing time to:
 
 ```text
 POST https://kidd.one/api/cron/run-all
