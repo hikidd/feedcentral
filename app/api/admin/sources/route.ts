@@ -19,6 +19,17 @@ export async function GET(request: NextRequest) {
               color: true,
             },
           },
+          feedJobs: {
+            orderBy: { startedAt: 'desc' },
+            take: 1,
+            select: {
+              status: true,
+              error: true,
+              articlesFound: true,
+              articlesAdded: true,
+              completedAt: true,
+            },
+          },
           _count: {
             select: {
               articles: true,
@@ -33,7 +44,10 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        data: sources,
+        data: sources.map(({ feedJobs, ...source }) => ({
+          ...source,
+          lastJob: feedJobs[0] ?? null,
+        })),
       });
     } catch (error: any) {
       console.error('Error fetching sources:', error);

@@ -385,6 +385,8 @@
       "fetchEmpty": "抓取完成，但该订阅源没有返回任何文章",
       "fetchWarningTitle": "抓取部分失败",
       "fetchFailedTitle": "抓取失败",
+      "lastFetchFailed": "上次抓取失败",
+      "dismissError": "关闭错误提示",
       "fetchFailed": "抓取来源失败",
       "deleteSuccess": "来源删除成功",
       "deleteFailed": "删除来源失败"

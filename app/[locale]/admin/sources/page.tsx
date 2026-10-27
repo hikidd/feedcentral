@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/lib/hooks/useToast';
 import { getIntlLocale } from '@/lib/locale';
-import { Plus, Search, Globe, Power, PowerOff, RefreshCw, Trash2, AlertTriangle, Pencil } from 'lucide-react';
+import { Plus, Search, Globe, Power, PowerOff, RefreshCw, Trash2, AlertTriangle, Pencil, X } from 'lucide-react';
 
 interface Source {
   id: string;
@@ -33,6 +33,13 @@ interface Source {
     name: string;
     color: string;
   };
+  lastJob: {
+    status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+    error: string | null;
+    articlesFound: number;
+    articlesAdded: number;
+    completedAt: string | null;
+  } | null;
   _count: {
     articles: number;
     feedJobs: number;
@@ -56,6 +63,11 @@ export default function AdminSourcesPage() {
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [fetchingSourceIds, setFetchingSourceIds] = useState<string[]>([]);
+  // Errors from the current session, keyed by source id. These take priority
+  // over the persisted job error and stay on screen until the next attempt.
+  const [fetchErrors, setFetchErrors] = useState<Record<string, string>>({});
+  // Persisted job errors the admin has explicitly dismissed.
+  const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set());
   const [deletingSource, setDeletingSource] = useState<Source | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -143,6 +155,20 @@ export default function AdminSourcesPage() {
 
   async function fetchSourceNow(id: string) {
     setFetchingSourceIds((current) => [...current, id]);
+    setFetchErrors((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    setDismissedErrors((current) => {
+      if (!current.has(id)) {
+        return current;
+      }
+
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
 
     try {
       const response = await fetch(`/api/admin/sources/${id}/fetch`, {
@@ -177,6 +203,7 @@ export default function AdminSourcesPage() {
       }
 
       if (data.data.warning) {
+        setFetchErrors((current) => ({ ...current, [id]: data.data.warning }));
         toast({
           title: t('admin.sourcesPage.fetchWarningTitle'),
           description: data.data.warning,
@@ -187,14 +214,29 @@ export default function AdminSourcesPage() {
       await fetchSources();
     } catch (error: any) {
       console.error('Failed to fetch source:', error);
+
+      const message = error.message || t('admin.sourcesPage.fetchFailed');
+      // Keep the reason visible on the card instead of only in a toast that
+      // disappears after a few seconds.
+      setFetchErrors((current) => ({ ...current, [id]: message }));
+
       toast({
         title: t('admin.sourcesPage.fetchFailedTitle'),
-        description: error.message || t('admin.sourcesPage.fetchFailed'),
+        description: message,
         variant: 'destructive',
       });
     } finally {
       setFetchingSourceIds((current) => current.filter((sourceId) => sourceId !== id));
     }
+  }
+
+  function dismissFetchError(id: string) {
+    setFetchErrors((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    setDismissedErrors((current) => new Set(current).add(id));
   }
 
   async function confirmDeleteSource() {
@@ -364,6 +406,12 @@ export default function AdminSourcesPage() {
           {filteredSources.map((source) => {
             const isFetching = fetchingSourceIds.includes(source.id);
 
+            // A failure from this session wins; otherwise fall back to the
+            // reason persisted by the last job so it survives a reload.
+            const jobError = source.lastJob?.status === 'FAILED' ? source.lastJob.error : null;
+            const fetchError =
+              fetchErrors[source.id] || (dismissedErrors.has(source.id) ? null : jobError);
+
             return (
             <div
               key={source.id}
@@ -401,6 +449,28 @@ export default function AdminSourcesPage() {
                     </span>
                   )}
                 </div>
+
+                {fetchError && (
+                  <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-destructive">
+                        {t('admin.sourcesPage.lastFetchFailed')}
+                      </p>
+                      <p className="mt-0.5 text-xs text-destructive/90 break-words">
+                        {fetchError}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => dismissFetchError(source.id)}
+                      className="shrink-0 rounded p-0.5 text-destructive/60 hover:text-destructive"
+                      aria-label={t('admin.sourcesPage.dismissError')}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="ml-4 flex items-center gap-2">

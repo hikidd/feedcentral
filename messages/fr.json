@@ -385,6 +385,8 @@
       "fetchEmpty": "Récupération terminée, mais le flux n’a renvoyé aucun article",
       "fetchWarningTitle": "Récupération partiellement échouée",
       "fetchFailedTitle": "Échec de la récupération",
+      "lastFetchFailed": "La dernière récupération a échoué",
+      "dismissError": "Masquer l’erreur",
       "fetchFailed": "Échec de la récupération de la source",
       "deleteSuccess": "Source supprimée avec succès",
       "deleteFailed": "Échec de la suppression de la source"

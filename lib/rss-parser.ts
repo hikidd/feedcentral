@@ -400,6 +400,7 @@ export async function fetchAndStoreArticles(source: Source, options: FetchAndSto
             completedAt: new Date(),
             articlesFound: 0,
             articlesAdded: 0,
+            error: null,
           },
         }),
       ]);
@@ -479,6 +480,8 @@ export async function fetchAndStoreArticles(source: Source, options: FetchAndSto
           completedAt: new Date(),
           articlesFound: articles.length,
           articlesAdded: addedCount,
+          // Persist the warning so the admin still sees it after a reload.
+          error: warning ?? null,
         },
       }),
     ]);

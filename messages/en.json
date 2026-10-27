@@ -385,6 +385,8 @@
       "fetchEmpty": "Fetch completed, but the feed returned no articles",
       "fetchWarningTitle": "Fetch partially failed",
       "fetchFailedTitle": "Fetch failed",
+      "lastFetchFailed": "Last fetch failed",
+      "dismissError": "Dismiss error",
       "fetchFailed": "Failed to fetch source",
       "deleteSuccess": "Source deleted successfully",
       "deleteFailed": "Failed to delete source"
