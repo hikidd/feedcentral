@@ -1,5 +1,7 @@
 import http from 'http';
 import https from 'https';
+import http2 from 'http2';
+import tls from 'tls';
 import dns from 'dns/promises';
 import net from 'net';
 import { RSS_CONFIG } from '@/lib/rss-config';
@@ -64,9 +66,98 @@ export async function ensureUrlAllowed(feedUrl: string): Promise<void> {
   }
 }
 
+interface FeedResponse {
+  statusCode: number;
+  location?: string;
+  body: string;
+}
+
 async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<string> {
   await ensureUrlAllowed(url.toString());
 
+  const response = await requestFeed(url);
+
+  if (response.statusCode >= 300 && response.statusCode < 400) {
+    if (redirects >= MAX_RSS_REDIRECTS) {
+      throw new Error('Too many RSS feed redirects');
+    }
+
+    if (!response.location) {
+      throw new Error('RSS feed redirect missing location');
+    }
+
+    let nextUrl: URL;
+    try {
+      nextUrl = new URL(response.location, url);
+    } catch (error) {
+      throw new Error('RSS feed redirect has invalid location');
+    }
+
+    return fetchRssXmlWithRedirects(nextUrl, redirects + 1);
+  }
+
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode === 401 || response.statusCode === 403) {
+      throw new Error(
+        `The site refused the request (HTTP ${response.statusCode}). It blocks automated requests even when the same URL opens in a browser.`
+      );
+    }
+
+    throw new Error(`RSS feed request failed with status ${response.statusCode}`);
+  }
+
+  return response.body;
+}
+
+async function requestFeed(url: URL): Promise<FeedResponse> {
+  // Some sites only answer over HTTP/2 and return 403 to HTTP/1.1 clients,
+  // even though the same URL loads fine in a browser. Negotiate the protocol
+  // first so we use HTTP/2 wherever the server supports it.
+  if (url.protocol === 'https:' && await supportsHttp2(url.hostname)) {
+    return requestFeedHttp2(url);
+  }
+
+  return requestFeedHttp1(url);
+}
+
+async function supportsHttp2(hostname: string): Promise<boolean> {
+  // Resolve through the same SSRF guard as the actual request, and pin the
+  // socket to the validated address so the probe cannot be re-pointed.
+  let address: ResolvedAddress;
+  try {
+    address = await resolvePublicAddress(hostname);
+  } catch {
+    // Let the HTTP/1.1 path surface the resolution error with its usual message.
+    return false;
+  }
+
+  return new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (supported: boolean) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      socket.destroy();
+      resolve(supported);
+    };
+
+    const socket = tls.connect({
+      host: address.address,
+      port: 443,
+      servername: net.isIP(hostname) ? undefined : hostname,
+      ALPNProtocols: ['h2', 'http/1.1'],
+      timeout: RSS_CONFIG.FEED_TIMEOUT,
+    });
+
+    socket.once('secureConnect', () => finish(socket.alpnProtocol === 'h2'));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+  });
+}
+
+function requestFeedHttp1(url: URL): Promise<FeedResponse> {
   return new Promise((resolve, reject) => {
     const client = url.protocol === 'https:' ? https : http;
     const request = client.request(
@@ -81,62 +172,23 @@ async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<st
       },
       (response) => {
         const statusCode = response.statusCode ?? 0;
-
-        if (statusCode >= 300 && statusCode < 400) {
-          response.resume();
-
-          if (redirects >= MAX_RSS_REDIRECTS) {
-            reject(new Error('Too many RSS feed redirects'));
-            return;
-          }
-
-          const location = response.headers.location;
-          if (!location) {
-            reject(new Error('RSS feed redirect missing location'));
-            return;
-          }
-
-          let nextUrl: URL;
-          try {
-            nextUrl = new URL(Array.isArray(location) ? location[0] : location, url);
-          } catch (error) {
-            reject(new Error('RSS feed redirect has invalid location'));
-            return;
-          }
-
-          fetchRssXmlWithRedirects(nextUrl, redirects + 1).then(resolve, reject);
-          return;
-        }
+        const location = response.headers.location;
+        const redirectLocation = Array.isArray(location) ? location[0] : location;
 
         if (statusCode < 200 || statusCode >= 300) {
           response.resume();
-
-          if (statusCode === 401 || statusCode === 403) {
-            reject(new Error(
-              `The site refused the request (HTTP ${statusCode}). It likely blocks automated requests or requires HTTP/2, which this fetcher does not support.`
-            ));
-            return;
-          }
-
-          reject(new Error(`RSS feed request failed with status ${statusCode}`));
+          resolve({ statusCode, location: redirectLocation, body: '' });
           return;
         }
 
-        const chunks: Buffer[] = [];
-        let receivedBytes = 0;
-
-        response.on('data', (chunk) => {
-          const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-          receivedBytes += buffer.length;
-
-          if (receivedBytes > MAX_RSS_RESPONSE_BYTES) {
-            request.destroy(new Error('RSS feed response too large'));
+        collectBody(response, (error, body) => {
+          if (error) {
+            reject(error);
             return;
           }
 
-          chunks.push(buffer);
+          resolve({ statusCode, location: redirectLocation, body });
         });
-        response.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
       }
     );
 
@@ -146,6 +198,83 @@ async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<st
     request.on('error', reject);
     request.end();
   });
+}
+
+function requestFeedHttp2(url: URL): Promise<FeedResponse> {
+  return new Promise((resolve, reject) => {
+    const client = http2.connect(url.origin, {
+      lookup: createPublicHostnameLookup(),
+    });
+
+    let settled = false;
+    const finish = (fn: () => void) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      client.close();
+      fn();
+    };
+
+    client.setTimeout(RSS_CONFIG.FEED_TIMEOUT, () => {
+      finish(() => reject(new Error(`RSS feed request timed out after ${RSS_CONFIG.FEED_TIMEOUT}ms`)));
+    });
+
+    client.once('error', (error) => finish(() => reject(error)));
+
+    const request = client.request({
+      ':path': `${url.pathname}${url.search}`,
+      ':method': 'GET',
+      'user-agent': RSS_CONFIG.USER_AGENT,
+    });
+
+    request.once('response', (headers) => {
+      const statusCode = Number(headers[':status'] ?? 0);
+      const header = headers.location;
+      const location = Array.isArray(header) ? header[0] : header;
+
+      if (statusCode < 200 || statusCode >= 300) {
+        request.resume();
+        request.once('end', () => finish(() => resolve({ statusCode, location, body: '' })));
+        return;
+      }
+
+      collectBody(request, (error, body) => {
+        if (error) {
+          finish(() => reject(error));
+          return;
+        }
+
+        finish(() => resolve({ statusCode, location, body }));
+      });
+    });
+
+    request.once('error', (error) => finish(() => reject(error)));
+    request.end();
+  });
+}
+
+function collectBody(
+  stream: NodeJS.ReadableStream,
+  callback: (error: Error | null, body: string) => void
+) {
+  const chunks: Buffer[] = [];
+  let receivedBytes = 0;
+
+  stream.on('data', (chunk) => {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    receivedBytes += buffer.length;
+
+    if (receivedBytes > MAX_RSS_RESPONSE_BYTES) {
+      callback(new Error('RSS feed response too large'), '');
+      return;
+    }
+
+    chunks.push(buffer);
+  });
+  stream.once('end', () => callback(null, Buffer.concat(chunks).toString('utf8')));
+  stream.once('error', (error) => callback(error as Error, ''));
 }
 
 export function createPublicHostnameLookup(): http.RequestOptions['lookup'] {
