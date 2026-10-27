@@ -131,6 +131,49 @@ describe('POST /api/admin/sources/[id]/fetch', () => {
     expect(status).toBe(500);
     expect(data.success).toBe(false);
     expect(data.error).toBe('Failed to fetch source');
-    expect(data.message).toBeUndefined();
+    expect(data.message).toBe('Timed out while parsing feed');
+  });
+
+  it('reports feed-level failures instead of a silent empty success', async () => {
+    mockFetchSingleSource.mockResolvedValue({
+      found: 0,
+      added: 0,
+      error: 'RSS feed request failed with status 403',
+    });
+
+    const request = createMockRequest('http://localhost:3000/api/admin/sources/source1/fetch', {
+      method: 'POST',
+      userId: 'admin123',
+      role: 'ADMIN',
+    });
+
+    const response = await sourceFetch(request, { params: createMockParams({ id: 'source1' }) });
+    const { status, data } = await getResponseData(response);
+
+    expect(status).toBe(502);
+    expect(data.success).toBe(false);
+    expect(data.message).toBe('RSS feed request failed with status 403');
+  });
+
+  it('passes a partial-failure warning through on success', async () => {
+    mockFetchSingleSource.mockResolvedValue({
+      found: 4,
+      added: 0,
+      warning: 'Feed was read (4 new items) but saving articles failed: connection reset',
+    });
+
+    const request = createMockRequest('http://localhost:3000/api/admin/sources/source1/fetch', {
+      method: 'POST',
+      userId: 'admin123',
+      role: 'ADMIN',
+    });
+
+    const response = await sourceFetch(request, { params: createMockParams({ id: 'source1' }) });
+    const { status, data } = await getResponseData(response);
+
+    expect(status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.data.found).toBe(4);
+    expect(data.data.warning).toContain('saving articles failed');
   });
 });

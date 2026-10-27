@@ -39,6 +39,17 @@ function isRetryablePrismaConnectionError(error: unknown): boolean {
   );
 }
 
+function describeBody(body: string): string {
+  const trimmed = body.trimStart();
+
+  if (/^<!doctype html/i.test(trimmed) || /^<html/i.test(trimmed)) {
+    return 'an HTML page';
+  }
+
+  const firstLine = trimmed.split('\n', 1)[0].slice(0, 80);
+  return firstLine ? `"${firstLine}"` : 'an empty response';
+}
+
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -95,6 +106,16 @@ export class RSSFeedParser {
   async fetchFeed(feedUrl: string): Promise<ParsedArticle[]> {
     try {
       const feedXml = await fetchRssXml(feedUrl);
+
+      if (!feedXml.trimStart().startsWith('<')) {
+        // Most commonly the URL returns an HTML page (bot check, login wall,
+        // or the site moved its feed) instead of XML. Say so instead of
+        // surfacing a raw parser error.
+        throw new Error(
+          `Response is not an RSS/Atom feed (got ${describeBody(feedXml)}); the URL may be an HTML page or a bot check`
+        );
+      }
+
       const feed = await this.parser.parseString(feedXml);
 
       // Limit articles per feed to prevent memory issues
@@ -128,8 +149,15 @@ export class RSSFeedParser {
           publishedAt,
         }];
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to fetch feed ${feedUrl}:`, error);
+
+      if (error?.message?.includes('Unencoded <')) {
+        throw new Error(
+          'Feed contains malformed XML (an unencoded "<" character); the site may have changed or returned an error page'
+        );
+      }
+
       throw error;
     }
   }
@@ -337,6 +365,7 @@ export async function fetchAndStoreArticles(source: Source, options: FetchAndSto
   found: number;
   added: number;
   error?: string;
+  warning?: string;
 }> {
   const { refreshCache = true, onCreatedArticles } = options;
   const parser = new RSSFeedParser();
@@ -395,6 +424,7 @@ export async function fetchAndStoreArticles(source: Source, options: FetchAndSto
     // Batch insert all new articles (single query)
     let addedCount = 0;
     let createdArticles: FeedCacheWarmupArticle[] = [];
+    let warning: string | undefined;
     if (newArticles.length > 0) {
       try {
         const insertResult = await prisma.article.createMany({
@@ -429,9 +459,10 @@ export async function fetchAndStoreArticles(source: Source, options: FetchAndSto
           });
         }
       } catch (error: any) {
-        // Log but don't fail - some articles might have been added
+        // Report but don't fail - the feed itself was fetched successfully
         console.warn(`Partial insert failure for ${source.name}:`, error.message);
         addedCount = 0;
+        warning = `Feed was read (${newArticles.length} new items) but saving articles failed: ${error.message}`;
       }
     }
 
@@ -463,6 +494,7 @@ export async function fetchAndStoreArticles(source: Source, options: FetchAndSto
     return {
       found: articles.length,
       added: addedCount,
+      ...(warning && { warning }),
     };
   } catch (error: any) {
     // Update job as failed

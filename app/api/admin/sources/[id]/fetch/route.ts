@@ -33,6 +33,7 @@ function classifyFetchError(error: unknown) {
     body: {
       success: false,
       error: 'Failed to fetch source',
+      ...(error instanceof Error && error.message && { message: error.message }),
     },
   };
 }
@@ -50,12 +51,30 @@ export async function POST(
       const { id } = await params;
       const result = await fetchSingleSource(id);
 
+      // fetchAndStoreArticles reports feed-level failures by returning `error`
+      // instead of throwing. Surface it so the admin sees why nothing was added.
+      if (result.error) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Failed to fetch source',
+            message: result.error,
+            data: {
+              found: result.found,
+              added: result.added,
+            },
+          },
+          { status: 502 }
+        );
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Source fetched successfully',
         data: {
           found: result.found,
           added: result.added,
+          ...(result.warning && { warning: result.warning }),
         },
       });
     } catch (error) {

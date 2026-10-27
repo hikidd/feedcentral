@@ -68,10 +68,35 @@ export async function PATCH(
       const body = await request.json();
       const { name, url, feedUrl, categoryId, logoUrl, isActive, fetchInterval } = body;
 
+      const trimmedName = typeof name === 'string' ? name.trim() : name;
+      if (trimmedName !== undefined && !trimmedName) {
+        return NextResponse.json(
+          { success: false, error: 'Source name cannot be empty' },
+          { status: 400 }
+        );
+      }
+
+      for (const [field, value] of [
+        ['url', url],
+        ['feedUrl', feedUrl],
+        ['logoUrl', logoUrl],
+      ] as const) {
+        if (value === undefined || value === null || value === '') {
+          continue;
+        }
+
+        if (typeof value !== 'string' || !isHttpUrl(value)) {
+          return NextResponse.json(
+            { success: false, error: `Invalid ${field}: must be an http(s) URL` },
+            { status: 400 }
+          );
+        }
+      }
+
       const source = await prisma.source.update({
         where: { id },
         data: {
-          ...(name !== undefined && { name }),
+          ...(trimmedName !== undefined && { name: trimmedName }),
           ...(url !== undefined && { url }),
           ...(feedUrl !== undefined && { feedUrl }),
           ...(categoryId !== undefined && { categoryId }),
@@ -90,7 +115,7 @@ export async function PATCH(
       });
     } catch (error: any) {
       console.error('Error updating source:', error);
-      
+
       if (error.code === 'P2025') {
         return NextResponse.json(
           {
@@ -98,6 +123,26 @@ export async function PATCH(
             error: 'Source not found',
           },
           { status: 404 }
+        );
+      }
+
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Another source already uses this feed URL',
+          },
+          { status: 409 }
+        );
+      }
+
+      if (error.code === 'P2003') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Selected category does not exist',
+          },
+          { status: 400 }
         );
       }
 
@@ -111,6 +156,15 @@ export async function PATCH(
       );
     }
   });
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 /**

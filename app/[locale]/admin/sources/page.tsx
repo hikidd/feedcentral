@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AddSourceDialog } from '@/components/admin/AddSourceDialog';
+import { EditSourceDialog } from '@/components/admin/EditSourceDialog';
 import {
   Dialog,
   DialogContent,
@@ -17,16 +18,18 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/lib/hooks/useToast';
 import { getIntlLocale } from '@/lib/locale';
-import { Plus, Search, Globe, Power, PowerOff, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Globe, Power, PowerOff, RefreshCw, Trash2, AlertTriangle, Pencil } from 'lucide-react';
 
 interface Source {
   id: string;
   name: string;
   url: string;
   feedUrl: string;
+  categoryId: string;
   isActive: boolean;
   lastFetchedAt: string | null;
   category: {
+    id: string;
     name: string;
     color: string;
   };
@@ -34,6 +37,12 @@ interface Source {
     articles: number;
     feedJobs: number;
   };
+}
+
+interface Category {
+  id: string;
+  name: string;
+  color: string;
 }
 
 export default function AdminSourcesPage() {
@@ -44,6 +53,8 @@ export default function AdminSourcesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingSource, setEditingSource] = useState<Source | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [fetchingSourceIds, setFetchingSourceIds] = useState<string[]>([]);
   const [deletingSource, setDeletingSource] = useState<Source | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -53,6 +64,25 @@ export default function AdminSourcesPage() {
       fetchSources();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    }
+  }, [user]);
+
+  async function fetchCategories() {
+    try {
+      const response = await fetch('/api/stats');
+      const data = await response.json();
+
+      if (data.success) {
+        setCategories(data.data.categories);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  }
 
   async function fetchSources(options?: { skipMinimumDelay?: boolean }) {
     const shouldEnforceMinimumDelay = !options?.skipMinimumDelay;
@@ -118,23 +148,47 @@ export default function AdminSourcesPage() {
       const response = await fetch(`/api/admin/sources/${id}/fetch`, {
         method: 'POST',
       });
-      const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || data.error || t('admin.sourcesPage.fetchFailed'));
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.message || data?.error || `${t('admin.sourcesPage.fetchFailed')} (HTTP ${response.status})`
+        );
       }
 
-      toast({
-        title: t('common.success'),
-        description: t('admin.sourcesPage.fetchSuccess', { added: data.data.added, found: data.data.found }),
-        variant: 'success',
-      });
+      // A feed can be read successfully yet yield nothing; say so explicitly
+      // instead of showing a bare "0 new of 0 found".
+      if (data.data.found === 0) {
+        toast({
+          title: t('common.success'),
+          description: t('admin.sourcesPage.fetchEmpty'),
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: t('common.success'),
+          description: t('admin.sourcesPage.fetchSuccess', {
+            added: data.data.added,
+            found: data.data.found,
+          }),
+          variant: 'success',
+        });
+      }
+
+      if (data.data.warning) {
+        toast({
+          title: t('admin.sourcesPage.fetchWarningTitle'),
+          description: data.data.warning,
+          variant: 'destructive',
+        });
+      }
 
       await fetchSources();
     } catch (error: any) {
       console.error('Failed to fetch source:', error);
       toast({
-        title: t('common.error'),
+        title: t('admin.sourcesPage.fetchFailedTitle'),
         description: error.message || t('admin.sourcesPage.fetchFailed'),
         variant: 'destructive',
       });
@@ -204,7 +258,25 @@ export default function AdminSourcesPage() {
         <AddSourceDialog
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
-          onSuccess={fetchSources}
+          onSuccess={() => {
+            void fetchSources();
+            void fetchCategories();
+          }}
+        />
+
+        <EditSourceDialog
+          open={editingSource !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingSource(null);
+            }
+          }}
+          onSuccess={() => {
+            void fetchSources({ skipMinimumDelay: true });
+            void fetchCategories();
+          }}
+          source={editingSource}
+          categories={categories}
         />
 
         <Dialog
@@ -341,6 +413,16 @@ export default function AdminSourcesPage() {
                 >
                   <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
                   {isFetching ? t('admin.sourcesPage.fetching') : t('admin.sourcesPage.fetchNow')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingSource(source)}
+                  className="gap-2"
+                  disabled={isFetching || deleting}
+                >
+                  <Pencil className="w-4 h-4" />
+                  {t('admin.sourcesPage.edit')}
                 </Button>
                 <Button
                   variant="ghost"

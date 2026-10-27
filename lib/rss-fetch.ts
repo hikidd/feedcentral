@@ -110,6 +110,14 @@ async function fetchRssXmlWithRedirects(url: URL, redirects: number): Promise<st
 
         if (statusCode < 200 || statusCode >= 300) {
           response.resume();
+
+          if (statusCode === 401 || statusCode === 403) {
+            reject(new Error(
+              `The site refused the request (HTTP ${statusCode}). It likely blocks automated requests or requires HTTP/2, which this fetcher does not support.`
+            ));
+            return;
+          }
+
           reject(new Error(`RSS feed request failed with status ${statusCode}`));
           return;
         }

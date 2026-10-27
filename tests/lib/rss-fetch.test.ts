@@ -140,4 +140,27 @@ describe('RSS fetch SSRF protections', () => {
       { address: '8.8.4.4', family: 4 },
     ]);
   });
+
+  it('explains a 403 instead of surfacing a bare status code', async () => {
+    mockLookup.mockResolvedValue([{ address: '8.8.8.8', family: 4 }]);
+    mockHttpRequest.mockImplementation((_url, _options, callback) => {
+      const response = new PassThrough() as PassThrough & {
+        statusCode: number;
+        headers: Record<string, string>;
+      };
+      response.statusCode = 403;
+      response.headers = {};
+
+      return createMockRequest(() => {
+        callback(response);
+        response.end('');
+      });
+    });
+
+    const { fetchRssXml } = require('@/lib/rss-fetch');
+
+    await expect(fetchRssXml('http://publisher.example/feed.xml')).rejects.toThrow(
+      'The site refused the request (HTTP 403)'
+    );
+  });
 });
