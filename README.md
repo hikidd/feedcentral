@@ -6,7 +6,7 @@ A professional RSS feed aggregator built with Next.js 14, designed to centralize
 
 ### Core Functionality
 - 📰 **RSS Feed Aggregation** - Automatic fetching and normalization of RSS/Atom feeds from trusted sources
-- � **Automated Updates** - Scheduled feed refresh every 30 minutes via Vercel Cron jobs
+- 🕒 **Automated Updates** - One Cloudflare Worker schedule refreshes global and user feeds and runs weekly cleanup
 - 🗂️ **Smart Categorization** - Organize articles by Technology, Science, Business, and Security
 - 🔍 **Full-text Search** - PostgreSQL-powered search across titles, descriptions, and content with relevance ranking
 - 📑 **Bookmarks System** - Save articles permanently with user-linked bookmarks that survive article cleanup
@@ -56,7 +56,7 @@ A professional RSS feed aggregator built with Next.js 14, designed to centralize
 - **ORM:** Prisma 6 with driver adapters
 - **Authentication:** JWT (jsonwebtoken) + bcrypt
 - **RSS Parsing:** rss-parser with custom normalization
-- **Cron Jobs:** Vercel Cron for automated feed fetching
+- **Cron Jobs:** One Cloudflare Worker schedule for unified feed fetching and weekly cleanup
 
 ### Developer Tools
 - **Analytics:** Vercel Analytics & Speed Insights
@@ -219,17 +219,11 @@ FeedCentral is optimized for Vercel deployment with zero configuration.
    curl "https://your-app.vercel.app/api/admin/seed?key=YOUR_SEED_SECRET_KEY"
    ```
 
-6. **Set up Cron Jobs**
+6. **Set up the unified Cron Job**
    
-   Vercel Cron is already configured in `vercel.json`:
-   ```json
-   {
-     "crons": [{
-       "path": "/api/cron/fetch-feeds",
-       "schedule": "*/30 * * * *"
-     }]
-   }
-   ```
+   Deploy the Cloudflare Worker in `cloudflare/scheduler/`. It calls
+   `https://kidd.one/api/cron/run-all` once per scheduled window, fetching both
+   global and user sources and running weekly cleanup from the application.
 
 #### Environment Variables Reference
 
@@ -262,7 +256,7 @@ FeedCentral can be deployed to any platform supporting Node.js and PostgreSQL:
 3. Build: `npm run build`
 4. Run: `npm run start`
 5. Seed database via API endpoint
-6. Set up cron job to hit `/api/cron/fetch-feeds` every 30 minutes
+6. Set up the single Cloudflare Worker schedule for `/api/cron/run-all`
 
 ### Production Checklist
 
@@ -503,7 +497,7 @@ FeedCentral provides a comprehensive RESTful API for articles, authentication, b
 
 | Endpoint | Method | Description | Auth Required |
 |----------|--------|-------------|---------------|
-| `/api/cron/fetch-feeds` | GET/POST | Trigger RSS feed fetch job | CRON_API_KEY or Vercel Cron secret |
+| `/api/cron/run-all` | GET/POST | Fetch global/user feeds and run weekly cleanup | CRON_API_KEY |
 
 ### Response Format
 
@@ -653,13 +647,13 @@ npm run build
 
 #### Cron Jobs Not Running
 
-- **Local Development:** Cron jobs don't run automatically. Trigger manually:
+- **Local Development:** Cron jobs don't run automatically. Trigger the unified endpoint manually:
   ```bash
-  curl -X POST http://localhost:3000/api/cron/fetch-feeds \
+  curl -X POST http://localhost:3000/api/cron/run-all \
     -H "Authorization: Bearer YOUR_CRON_API_KEY"
   ```
 
-- **Vercel:** Check cron configuration in `vercel.json` and deployment logs
+- **Production:** Check the Cloudflare Worker logs and confirm that legacy VM/Vercel cron jobs are disabled
 
 ### Getting Help
 
@@ -804,7 +798,7 @@ Thanks to all contributors who have helped make FeedCentral better!
 
 ### Official Links
 
-- **Live Instance:** [feed.benzoogataga.com](https://feed.benzoogataga.com)
+- **Live Instance:** [kidd.one](https://kidd.one)
 - **GitHub Repository:** [BENZOOgataga/feedcentral](https://github.com/BENZOOgataga/feedcentral)
 - **Issues & Bug Reports:** [GitHub Issues](https://github.com/BENZOOgataga/feedcentral/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/BENZOOgataga/feedcentral/discussions)

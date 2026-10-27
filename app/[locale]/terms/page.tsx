@@ -53,19 +53,19 @@ export default function TermsPage() {
                 <Scale className="h-4 w-4 shrink-0" />
                 <span>
                   <strong>{t('terms.applicableTo')}</strong> {t('terms.applicableDescription', { 
-                    url: 'feed.benzoogataga.com' 
-                  }).split('feed.benzoogataga.com')[0]}
+                    url: 'kidd.one'
+                  }).split('kidd.one')[0]}
                   <a 
-                    href="https://feed.benzoogataga.com" 
+                    href="https://kidd.one"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
-                    feed.benzoogataga.com
+                    kidd.one
                   </a>
                   {t('terms.applicableDescription', { 
-                    url: 'feed.benzoogataga.com' 
-                  }).split('feed.benzoogataga.com')[1]}
+                    url: 'kidd.one'
+                  }).split('kidd.one')[1]}
                 </span>
               </p>
             </div>
@@ -595,12 +595,12 @@ export default function TermsPage() {
                     <strong>Verify your instance:</strong> If you're using a FeedCentral deployment, confirm 
                     it's operated by the official FeedCentral team at{' '}
                     <a 
-                      href="https://feed.benzoogataga.com" 
+                      href="https://kidd.one"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-primary hover:underline font-semibold"
                     >
-                      feed.benzoogataga.com
+                      kidd.one
                     </a>
                     . Third-party instances may have different terms of service, privacy practices, and content policies.
                   </span>
@@ -613,12 +613,12 @@ export default function TermsPage() {
                 <li>
                   <strong className="text-foreground">Official Domain:</strong>{' '}
                   <a 
-                    href="https://feed.benzoogataga.com" 
+                    href="https://kidd.one"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    feed.benzoogataga.com
+                    kidd.one
                   </a>
                 </li>
                 <li>

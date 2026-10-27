@@ -1,17 +1,11 @@
 interface Env {
   APP_BASE_URL: string;
   CRON_API_KEY: string;
-  FETCH_FEEDS_PATH: string;
-  FETCH_USER_SOURCES_PATH: string;
-  CLEANUP_ARTICLES_PATH: string;
-  FETCH_FEEDS_QUERY?: string;
-  FETCH_USER_SOURCES_QUERY?: string;
-  CLEANUP_ARTICLES_QUERY?: string;
+  RUN_ALL_PATH: string;
+  RUN_ALL_QUERY?: string;
 }
 
-const FETCH_FEEDS_CRON = '0 0-10 * * *';
-const FETCH_USER_SOURCES_CRON = '7 0-10 * * *';
-const CLEANUP_ARTICLES_CRON = '55 15 * * 1';
+const RUN_ALL_CRON = '0 0-10 * * *';
 
 type JobConfig = {
   name: string;
@@ -28,20 +22,10 @@ export default {
         ok: true,
         baseUrl: env.APP_BASE_URL,
         jobs: {
-          fetchFeeds: {
-            cron: FETCH_FEEDS_CRON,
-            path: env.FETCH_FEEDS_PATH,
-            query: env.FETCH_FEEDS_QUERY || '',
-          },
-          fetchUserSources: {
-            cron: FETCH_USER_SOURCES_CRON,
-            path: env.FETCH_USER_SOURCES_PATH,
-            query: env.FETCH_USER_SOURCES_QUERY || '',
-          },
-          cleanupArticles: {
-            cron: CLEANUP_ARTICLES_CRON,
-            path: env.CLEANUP_ARTICLES_PATH,
-            query: env.CLEANUP_ARTICLES_QUERY || '',
+          runAll: {
+            cron: RUN_ALL_CRON,
+            path: env.RUN_ALL_PATH,
+            query: env.RUN_ALL_QUERY || '',
           },
         },
       });
@@ -63,28 +47,15 @@ export default {
 };
 
 function getJobForCron(cron: string, env: Env): JobConfig | null {
-  switch (cron) {
-    case FETCH_FEEDS_CRON:
-      return {
-        name: 'fetch-feeds',
-        path: env.FETCH_FEEDS_PATH,
-        query: env.FETCH_FEEDS_QUERY,
-      };
-    case FETCH_USER_SOURCES_CRON:
-      return {
-        name: 'fetch-user-sources',
-        path: env.FETCH_USER_SOURCES_PATH,
-        query: env.FETCH_USER_SOURCES_QUERY,
-      };
-    case CLEANUP_ARTICLES_CRON:
-      return {
-        name: 'cleanup-articles',
-        path: env.CLEANUP_ARTICLES_PATH,
-        query: env.CLEANUP_ARTICLES_QUERY,
-      };
-    default:
-      return null;
+  if (cron !== RUN_ALL_CRON) {
+    return null;
   }
+
+  return {
+    name: 'run-all',
+    path: env.RUN_ALL_PATH,
+    query: env.RUN_ALL_QUERY,
+  };
 }
 
 async function runJob(job: JobConfig, env: Env): Promise<void> {

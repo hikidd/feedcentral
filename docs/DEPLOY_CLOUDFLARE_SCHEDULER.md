@@ -1,19 +1,24 @@
 # Cloudflare Worker Scheduler
 
-This project uses a standalone Cloudflare Worker to trigger the existing application cron endpoints.
+This project uses a standalone Cloudflare Worker to trigger one authenticated application cron endpoint.
 
 ## Location
 
 - Worker config: `cloudflare/scheduler/wrangler.toml`
 - Worker code: `cloudflare/scheduler/src/index.ts`
+- Application endpoint: `app/api/cron/run-all/route.ts`
 
 ## What it calls
 
-The Worker sends authenticated `POST` requests to:
+The Worker sends an authenticated `POST` request to:
 
-- `/api/cron/fetch-feeds`
-- `/api/cron/fetch-user-sources`
-- `/api/cron/cleanup-articles`
+- `/api/cron/run-all`
+
+The unified endpoint performs these steps sequentially:
+
+1. Fetch active global RSS sources.
+2. Fetch all enabled user-provided RSS sources.
+3. On the first Monday run of each UTC week, clean up expired public and user articles.
 
 Authentication uses:
 
@@ -21,35 +26,30 @@ Authentication uses:
 Authorization: Bearer <CRON_API_KEY>
 ```
 
-The app already accepts `CRON_API_KEY` for these routes.
+The app accepts the same `CRON_API_KEY` for the unified endpoint.
 
 ## Configurable values
 
 Edit `cloudflare/scheduler/wrangler.toml`:
 
-- `APP_BASE_URL` — defaults to `https://kidd.cc.cd`
-- `FETCH_FEEDS_PATH`
-- `FETCH_USER_SOURCES_PATH`
-- `CLEANUP_ARTICLES_PATH`
-- `FETCH_FEEDS_QUERY`
-- `FETCH_USER_SOURCES_QUERY`
-- `CLEANUP_ARTICLES_QUERY`
+- `APP_BASE_URL` — production application URL (`https://kidd.one`)
+- `RUN_ALL_PATH` — unified cron endpoint path
+- `RUN_ALL_QUERY` — optional query string for the endpoint
+
+The `CRON_API_KEY` is stored as a Worker secret and must match the application environment variable.
 
 ## Cron schedule
 
 Cloudflare cron expressions are configured in UTC.
 
-Current schedules:
+Current schedule:
 
 - `0 0-10 * * *`
-  - Beijing time: hourly from 08:00 to 18:00
-  - Calls `/api/cron/fetch-feeds`
-- `7 0-10 * * *`
-  - Beijing time: hourly from 08:07 to 18:07
-  - Calls `/api/cron/fetch-user-sources`
-- `55 15 * * 1`
-  - Beijing time: 23:55 every Monday
-  - Calls `/api/cron/cleanup-articles`
+  - Runs hourly from 00:00 through 10:00 UTC.
+  - Beijing time: 08:00 through 18:00.
+  - Calls `/api/cron/run-all` once per hour.
+
+The application runs weekly cleanup when the scheduled request arrives on Monday at 00:00 UTC (Monday 08:00 Beijing time). The endpoint also supports `?forceCleanup=true` for an authenticated manual verification.
 
 ## Setup
 
@@ -72,7 +72,7 @@ Set the cron API key secret:
 npx wrangler secret put CRON_API_KEY
 ```
 
-When prompted, paste the same `CRON_API_KEY` value used by the app.
+When prompted, paste the same `CRON_API_KEY` value used by the application.
 
 ## Local testing
 
@@ -88,9 +88,11 @@ Health check:
 curl http://127.0.0.1:8787/health
 ```
 
-You can manually trigger scheduled events from Wrangler's scheduled-test mode UI or local endpoint.
+You can manually trigger scheduled events from Wrangler's scheduled-test mode UI.
 
 ## Deploy
+
+After changing the application URL or Worker configuration, redeploy the Worker:
 
 ```bash
 cd cloudflare/scheduler
@@ -99,16 +101,18 @@ npm run deploy
 
 ## Verification
 
-1. Open Worker logs in Cloudflare and confirm scheduled runs are happening.
-2. Check the app logs for:
-   - `[CRON] Starting RSS feed fetch...`
-   - `[USER CRON] Starting user sources fetch...`
-   - `[CLEANUP] Starting article cleanup...`
-3. Verify new content appears after the fetch windows.
-4. Verify old article cleanup still runs daily.
+1. Open Worker logs in Cloudflare and confirm the single scheduled job is running.
+2. Open `/health` and confirm it reports one `run-all` job with `https://kidd.one` as the base URL.
+3. Check application logs for:
+   - `[CRON] Starting global source fetch...`
+   - `[CRON] Starting user source fetch...`
+   - `[CRON] Starting weekly article cleanup...` on the weekly window
+4. Verify new content appears after a fetch window.
+5. Verify old article cleanup runs on Monday morning Beijing time.
+6. Make sure any legacy VM `crontab` entry is disabled; only this Worker should trigger automatic jobs.
 
 ## Notes
 
-- The app's `vercel.json` no longer contains cron triggers.
-- This avoids Vercel Hobby cron deployment limits.
-- If you change the site domain later, update `APP_BASE_URL` and redeploy the Worker.
+- `vercel.json` does not contain cron triggers.
+- The old `/api/cron/cleanup-user-articles` endpoint is retained only for compatibility and is not called by the unified scheduler.
+- If the site domain changes later, update `APP_BASE_URL`, update the application public URL environment variable, and redeploy the Worker.

@@ -1,126 +1,47 @@
-# FeedCentral Cron Jobs - Production Setup
+# FeedCentral Unified Cron Setup
 
-## 🔧 PRODUCTION SCRIPTS (Your Server)
+The production deployment uses one Cloudflare Worker schedule. The Worker calls:
 
-### Scripts Location: `/root/scripts/`
+    POST https://kidd.one/api/cron/run-all
 
-**1. Fetch Feeds Script** (`fetch-feeds.sh`)
-```bash
-#!/bin/bash
-DOMAIN="example.com"
-ENDPOINT="https://${DOMAIN}/api/cron/fetch-feeds"
-API_KEY="your-api-key-here"
-LOG_FILE="/var/log/feedcentral-fetch.log"
+The unified endpoint:
 
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
-}
+1. Fetches active global RSS sources.
+2. Fetches all enabled user RSS sources.
+3. Runs the 7/14-day article cleanup on the first Monday run of each UTC week.
 
-log "Starting feed refresh..."
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$ENDPOINT" \
-    -H "Authorization: Bearer $API_KEY" \
-    -H "Content-Type: application/json" \
-    --max-time 300)
+Authentication:
 
-HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
-BODY=$(echo "$RESPONSE" | sed '$d')
+    Authorization: Bearer <CRON_API_KEY>
 
-if [ "$HTTP_CODE" -eq 200 ]; then
-    log "✓ Feed refresh successful (HTTP $HTTP_CODE)"
-    log "Response: $BODY"
-else
-    log "✗ Feed refresh failed (HTTP $HTTP_CODE)"
-    log "Error: $BODY"
-    exit 1
-fi
-log "Feed refresh completed"
-```
+## Recommended production setup
 
-**2. Cleanup Articles Script** (`cleanup-articles.sh`)
-```bash
-#!/bin/bash
-DOMAIN="your-domain.com"
-ENDPOINT="https://${DOMAIN}/api/cron/cleanup-articles"
-API_KEY="your-api-key-here"
-LOG_FILE="/var/log/feedcentral-cleanup.log"
+Configure the Cloudflare Worker in `cloudflare/scheduler/` and do not configure a
+second VM crontab or Vercel Cron job. After changing the domain or Worker config,
+run:
 
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
-}
+    cd cloudflare/scheduler
+    npm run deploy
 
-log "Starting article cleanup..."
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$ENDPOINT" \
-    -H "Authorization: Bearer $API_KEY" \
-    -H "Content-Type: application/json" \
-    --max-time 300)
+## Optional VM fallback
 
-HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
-BODY=$(echo "$RESPONSE" | sed '$d')
+Only use this if the Cloudflare Worker is not enabled. Configure exactly one
+hourly entry, with the server cron timezone set to UTC so the weekly cleanup
+window is reached reliably:
 
-if [ "$HTTP_CODE" -eq 200 ]; then
-    log "✓ Article cleanup successful (HTTP $HTTP_CODE)"
-    log "Response: $BODY"
-    
-    SOFT_DELETED=$(echo "$BODY" | grep -oP '"softDeleted":\K\d+' || echo "N/A")
-    ARCHIVED=$(echo "$BODY" | grep -oP '"archived":\K\d+' || echo "N/A")
-    HARD_DELETED=$(echo "$BODY" | grep -oP '"hardDeleted":\K\d+' || echo "N/A")
-    
-    log "Stats: Soft-deleted: $SOFT_DELETED | Archived: $ARCHIVED | Hard-deleted: $HARD_DELETED"
-else
-    log "✗ Article cleanup failed (HTTP $HTTP_CODE)"
-    log "Error: $BODY"
-    exit 1
-fi
-log "Article cleanup completed"
-```
+    0 * * * * /root/scripts/cron-runner.sh >> /var/log/feedcentral-cron.log 2>&1
 
----
+Set `CRON_API_KEY` in the VM environment before running the script. Do not also
+configure the old `fetch-feeds.sh`, `cleanup-articles.sh`, or Vercel Cron jobs.
 
-## 📅 CRONTAB CONFIGURATION
+## Manual verification
 
-```bash
-# Edit crontab
-crontab -e
+    curl -X POST https://kidd.one/api/cron/run-all \
+      -H "Authorization: Bearer $CRON_API_KEY" \
+      -H "Content-Type: application/json"
 
-# Add these lines:
-*/30 * * * * /root/scripts/fetch-feeds.sh
-0 2 * * * /root/scripts/cleanup-articles.sh
-```
+To verify cleanup without waiting for Monday:
 
-**Schedule:**
-- Fetch feeds: Every 30 minutes
-- Cleanup: Daily at 2 AM
-
----
-
-## 🚀 DEPLOYMENT STEPS
-
-```bash
-# 1. Upload scripts to server
-scp scripts/run-cron.sh root@your-server:/root/scripts/fetch-feeds.sh
-scp scripts/cleanup-articles.sh root@your-server:/root/scripts/
-
-# 2. Make executable
-ssh root@your-server "chmod +x /root/scripts/*.sh"
-
-# 3. Update crontab (add cleanup line)
-ssh root@your-server "crontab -e"
-
-# 4. Test scripts
-ssh root@your-server "/root/scripts/cleanup-articles.sh"
-```
-
----
-
-## 📊 MONITORING
-
-```bash
-# View fetch logs
-tail -f /var/log/feedcentral-fetch.log
-
-# View cleanup logs  
-tail -f /var/log/feedcentral-cleanup.log
-
-# Check cleanup stats
-grep "Stats:" /var/log/feedcentral-cleanup.log | tail -10
-```
+    curl -X POST 'https://kidd.one/api/cron/run-all?forceCleanup=true' \
+      -H "Authorization: Bearer $CRON_API_KEY" \
+      -H "Content-Type: application/json"

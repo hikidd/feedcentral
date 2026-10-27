@@ -4,10 +4,10 @@ import { getCronApiKey } from '@/lib/env';
 import { getValidatedConcurrency, getRuntimeConfig } from '@/lib/rss-config';
 
 /**
- * Cron endpoint for automatic RSS feed fetching
- * Triggered by Vercel Cron every 30 minutes
- * 
- * Security: Requires CRON_API_KEY header or Vercel cron secret
+ * Standalone endpoint for global RSS feed fetching.
+ * Automatic production scheduling uses `/api/cron/run-all`.
+ *
+ * Security: Requires CRON_API_KEY header or CRON_SECRET
  * 
  * Query params:
  * - concurrency: Number of feeds to fetch in parallel (default: 5, max: 10)
@@ -20,12 +20,13 @@ export async function GET(request: NextRequest) {
     const cronApiKey = getCronApiKey();
     const isDevelopment = process.env.NODE_ENV === 'development';
 
-    // Vercel Cron sends a secret in Authorization header
-    const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    const isAuthorized = cronApiKey && authHeader === `Bearer ${cronApiKey}`;
+    // An external scheduler may send the shared cron secret in Authorization.
+    const isCronSecretAuthorized = !!process.env.CRON_SECRET
+      && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+    const isAuthorized = !!cronApiKey && authHeader === `Bearer ${cronApiKey}`;
 
     // Allow unauthenticated access in development for convenience
-    if (!isDevelopment && !isVercelCron && !isAuthorized) {
+    if (!isDevelopment && !isCronSecretAuthorized && !isAuthorized) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

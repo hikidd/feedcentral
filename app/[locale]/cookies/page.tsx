@@ -53,19 +53,19 @@ export default function CookiesPage() {
                 <Scale className="h-4 w-4 shrink-0" />
                 <span>
                   <strong>{t('cookies.applicableTo')}</strong> {t('cookies.applicableDescription', { 
-                    url: 'feed.benzoogataga.com' 
-                  }).split('feed.benzoogataga.com')[0]}
+                    url: 'kidd.one'
+                  }).split('kidd.one')[0]}
                   <a 
-                    href="https://feed.benzoogataga.com" 
+                    href="https://kidd.one"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
-                    feed.benzoogataga.com
+                    kidd.one
                   </a>
                   {t('cookies.applicableDescription', { 
-                    url: 'feed.benzoogataga.com' 
-                  }).split('feed.benzoogataga.com')[1]}
+                    url: 'kidd.one'
+                  }).split('kidd.one')[1]}
                 </span>
               </p>
             </div>
@@ -542,12 +542,12 @@ export default function CookiesPage() {
                     <strong>Check your instance:</strong> If you're using a FeedCentral deployment operated by 
                     someone else, review their specific cookie policy. The <strong>official FeedCentral instance</strong> at{' '}
                     <a 
-                      href="https://feed.benzoogataga.com" 
+                      href="https://kidd.one"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-primary hover:underline font-semibold"
                     >
-                      feed.benzoogataga.com
+                      kidd.one
                     </a>
                     {' '}follows this cookie policy exactly.
                   </span>
@@ -560,12 +560,12 @@ export default function CookiesPage() {
                 <li>
                   <strong className="text-foreground">Domain:</strong>{' '}
                   <a 
-                    href="https://feed.benzoogataga.com" 
+                    href="https://kidd.one"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    feed.benzoogataga.com
+                    kidd.one
                   </a>
                 </li>
                 <li>

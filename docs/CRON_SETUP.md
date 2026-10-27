@@ -1,295 +1,114 @@
-# FeedCentral Cron Jobs Setup
+# FeedCentral Unified Cron Setup
 
-## Overview
-FeedCentral uses cron jobs to automatically fetch RSS feeds from both global sources and user-specific sources.
+FeedCentral uses one authenticated cron endpoint for this personal deployment:
 
-## Available Endpoints
+```text
+POST https://kidd.one/api/cron/run-all
+```
 
-### 1. Global RSS Feeds
-- **URL**: `https://feedcentral.lyradevstudio.com/api/cron/fetch-feeds`
-- **Purpose**: Fetches articles from admin-managed sources (13 sources)
-- **Schedule**: Every 30 minutes recommended
-- **Query Params**:
-  - `concurrency=5` - Parallel fetch limit (default: 5, max: 10)
-  - `sourceId=xxx` - Fetch single source only (optional)
+The endpoint runs the following stages sequentially:
 
-### 2. User-Specific Sources
-- **URL**: `https://feedcentral.lyradevstudio.com/api/cron/fetch-user-sources`
-- **Purpose**: Fetches articles from user-added custom RSS feeds
-- **Schedule**: Every 30 minutes recommended
-- **Query Params**:
-  - `concurrency=5` - Parallel fetch limit (default: 5, max: 10)
-  - `userId=xxx` - Fetch sources for specific user (optional)
+1. Fetch active global RSS sources.
+2. Fetch all enabled user-provided RSS sources.
+3. Run public and user article cleanup on the first Monday invocation of each UTC week.
 
-### 3. Statistics
-- **URL**: `https://feedcentral.lyradevstudio.com/api/cron/stats`
-- **Purpose**: Monitor RSS fetching performance
-- **Query Params**:
-  - `limit=10` - Recent jobs to show (default: 10, max: 100)
-  - `sourceId=xxx` - Filter by source (optional)
+The endpoint accepts the existing `CRON_API_KEY` bearer token:
 
-## Authentication
-
-All endpoints require the `CRON_API_KEY` header:
-
-```bash
+```http
 Authorization: Bearer YOUR_CRON_API_KEY
 ```
 
-**Generate a secure key:**
-```bash
-openssl rand -base64 32
+## Recommended production scheduler: Cloudflare Worker
+
+The Worker configuration is in `cloudflare/scheduler/` and has one schedule:
+
+```text
+0 0-10 * * *
 ```
 
-**Add to Vercel:**
+This runs hourly from 00:00 through 10:00 UTC (08:00 through 18:00 Beijing time).
+The application decides when to run the weekly cleanup; no second cleanup timer is
+needed.
+
+Deploy it with:
+
 ```bash
-echo "YOUR_GENERATED_KEY" | vercel env add CRON_API_KEY production
+cd cloudflare/scheduler
+npm install
+npx wrangler login
+npx wrangler secret put CRON_API_KEY
+npm run deploy
 ```
 
----
+`CRON_API_KEY` must have the same value in the application environment and in the
+Worker secret.
 
-## Setup on Your VM
+## Optional VM fallback
 
-### 1. Make the script executable
-```bash
-chmod +x scripts/cron-runner.sh
-```
+Use this only when the Cloudflare Worker is disabled. Do not run both schedulers.
+Configure exactly one hourly entry, with the VM cron timezone set to UTC:
 
-### 2. Set environment variable
-Add to `~/.bashrc` or `~/.profile`:
-```bash
-echo 'export CRON_API_KEY="your-secret-key-here"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### 3. Add to crontab
-```bash
-crontab -e
-```
-
-Add this line to run every 30 minutes:
 ```cron
-*/30 * * * * /full/path/to/feedcentral/scripts/cron-runner.sh >> /var/log/feedcentral-cron.log 2>&1
+0 * * * * /full/path/to/feedcentral/scripts/cron-runner.sh >> /var/log/feedcentral-cron.log 2>&1
 ```
 
-### 4. View logs
+Set the API key in the VM environment:
+
 ```bash
-tail -f /var/log/feedcentral-cron.log
+export CRON_API_KEY="your-secret-key"
+chmod 700 scripts/cron-runner.sh
 ```
 
----
+Do not add separate entries for global feeds, user feeds, or cleanup.
 
-## Manual Testing
+## Manual testing
 
-### Fetch Global RSS Feeds
+Run the complete job:
+
 ```bash
-curl -X POST https://feedcentral.lyradevstudio.com/api/cron/fetch-feeds \
+curl -X POST https://kidd.one/api/cron/run-all \
   -H "Authorization: Bearer YOUR_CRON_API_KEY" \
   -H "Content-Type: application/json"
 ```
 
-### Fetch User Sources
+Run the same job and force cleanup:
+
 ```bash
-curl -X POST https://feedcentral.lyradevstudio.com/api/cron/fetch-user-sources \
+curl -X POST 'https://kidd.one/api/cron/run-all?forceCleanup=true' \
   -H "Authorization: Bearer YOUR_CRON_API_KEY" \
   -H "Content-Type: application/json"
 ```
 
-### Get Statistics
-```bash
-curl -X GET "https://feedcentral.lyradevstudio.com/api/cron/stats?limit=20" \
-  -H "Authorization: Bearer YOUR_CRON_API_KEY" | jq '.'
-```
+The standalone endpoints remain available for diagnostics and compatibility:
 
----
+- `/api/cron/fetch-feeds`
+- `/api/cron/fetch-user-sources`
+- `/api/cron/cleanup-articles`
+- `/api/cron/stats`
 
-## Cron Schedule Reference
-
-| Schedule | Description |
-|----------|-------------|
-| `*/30 * * * *` | Every 30 minutes (recommended) |
-| `*/15 * * * *` | Every 15 minutes |
-| `0 * * * *` | Every hour |
-| `0 */2 * * *` | Every 2 hours |
-| `0 0 * * *` | Daily at midnight |
-
----
-
-## Performance Tuning
-
-### Adjust Concurrency
-```bash
-# Fetch with higher concurrency (8 feeds in parallel)
-curl "https://feedcentral.lyradevstudio.com/api/cron/fetch-feeds?concurrency=8" \
-  -H "Authorization: Bearer YOUR_CRON_API_KEY"
-```
-
-### Fetch Specific User Only
-```bash
-curl "https://feedcentral.lyradevstudio.com/api/cron/fetch-user-sources?userId=USER_ID" \
-  -H "Authorization: Bearer YOUR_CRON_API_KEY"
-```
-
----
+They must not be configured as additional automatic cron jobs.
 
 ## Monitoring
 
-### Check Recent Performance
-```bash
-curl "https://feedcentral.lyradevstudio.com/api/cron/stats?limit=50" \
-  -H "Authorization: Bearer YOUR_CRON_API_KEY" | jq '.'
-```
+Check the Cloudflare Worker logs and the application logs for:
 
-### Expected Response
-```json
-{
-  "success": true,
-  "summary": {
-    "recentJobs": {
-      "total": 50,
-      "completed": 48,
-      "failed": 2,
-      "successRate": "96.00%"
-    },
-    "articles": {
-      "found": 450,
-      "added": 120,
-      "duplicates": 330
-    },
-    "performance": {
-      "avgDurationSeconds": "45.00s"
-    }
-  }
-}
-```
+- `[CRON] Starting global source fetch...`
+- `[CRON] Starting user source fetch...`
+- `[CRON] Starting weekly article cleanup...`
 
----
+Check the current VM entries if a legacy server was previously used:
 
-## Troubleshooting
-
-### Check if cron is running
-```bash
-grep CRON /var/log/syslog
-```
-
-### Test script manually
-```bash
-./scripts/cron-runner.sh
-```
-
-### Verify environment variable
-```bash
-echo $CRON_API_KEY
-```
-
-### Check crontab entries
 ```bash
 crontab -l
 ```
 
-### View recent executions
-```bash
-tail -100 /var/log/feedcentral-cron.log
-```
+Remove old `fetch-feeds.sh`, `cleanup-articles.sh`, and duplicate `cron-runner.sh`
+entries before enabling the Worker.
 
----
+## Security notes
 
-## Security Notes
-
-1. **Never commit CRON_API_KEY to git**
-2. Store the key in environment variables only
-3. Use a strong random key (32+ characters)
-4. Rotate the key periodically
-5. Restrict script permissions:
-   ```bash
-   chmod 700 scripts/cron-runner.sh
-   ```
-   - `API_URL` to your Vercel domain
-   - `CRON_API_KEY` to match your env variable
-
----
-
-## Option 3: GitHub Actions (Free & Simple)
-
-Create `.github/workflows/cron-jobs.yml`:
-
-```yaml
-name: Cron Jobs
-
-on:
-  schedule:
-    # Fetch feeds every 30 minutes
-    - cron: '*/30 * * * *'
-    # Cleanup articles daily at 2 AM
-    - cron: '0 2 * * *'
-  workflow_dispatch: # Allow manual trigger
-
-jobs:
-  fetch-feeds:
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '*/30 * * * *' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Fetch Feeds
-        run: |
-          curl -X POST https://your-domain.vercel.app/api/cron/fetch-feeds \
-            -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}" \
-            -H "Content-Type: application/json"
-  
-  cleanup-articles:
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '0 2 * * *' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Cleanup Articles
-        run: |
-          curl -X POST https://your-domain.vercel.app/api/cron/cleanup-articles \
-            -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}" \
-            -H "Content-Type: application/json"
-```
-
-Add `CRON_API_KEY` to GitHub Secrets:
-1. Go to repo Settings → Secrets → Actions
-2. Add secret: `CRON_API_KEY` with your key
-
----
-
-## Testing
-
-Test endpoints manually:
-
-```bash
-# Test fetch feeds
-curl -X POST https://your-domain.vercel.app/api/cron/fetch-feeds \
-  -H "Authorization: Bearer YOUR_CRON_API_KEY"
-
-# Test cleanup
-curl -X POST https://your-domain.vercel.app/api/cron/cleanup-articles \
-  -H "Authorization: Bearer YOUR_CRON_API_KEY"
-```
-
----
-
-## Recommended: Option 3 (GitHub Actions)
-
-**Pros:**
-- ✅ Free for public repos
-- ✅ Built into your repo
-- ✅ Easy to manage
-- ✅ Logs available in GitHub
-
-**Cons:**
-- ⚠️ Requires public repo or GitHub Pro for private repos
-- ⚠️ May have slight delays (up to 5 minutes)
-
----
-
-## Quick Setup Commands
-
-```bash
-# Set environment variable in Vercel
-vercel env add CRON_API_KEY production
-
-# Or use Vercel dashboard:
-# Project Settings → Environment Variables → Add
-# Name: CRON_API_KEY
-# Value: your-secret-key-here
-```
+1. Never commit `CRON_API_KEY` to the repository.
+2. Use a random key of at least 32 characters.
+3. Store the key in Vercel/application environment variables and the Cloudflare
+   Worker secret.
+4. Rotate the key in both places together.

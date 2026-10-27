@@ -161,7 +161,7 @@ describe('getFeedPageData', () => {
       activeCategory: null,
       articlesPage: {
         articles: [],
-        page: null,
+        page: 1,
         pageSize: 20,
         total: null,
         totalPages: null,

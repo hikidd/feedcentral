@@ -251,12 +251,12 @@ export default function RoadmapPage() {
             <p className="text-sm text-muted-foreground">
               {t('roadmap.instance.description')}{' '}
               <a 
-                href="https://feed.benzoogataga.com" 
+                href="https://kidd.one"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                feed.benzoogataga.com
+                kidd.one
               </a>
               . {t('roadmap.instance.fork')}
             </p>

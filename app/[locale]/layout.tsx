@@ -44,13 +44,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: t('title'),
       description: t('description'),
-      url: 'https://feed.benzoogataga.com',
+      url: 'https://kidd.one',
       siteName: 'FeedCentral',
       locale: locale,
       type: 'website',
       images: [
         {
-          url: 'https://feed.benzoogataga.com/og-image.png',
+          url: 'https://kidd.one/og-image.png',
           width: 1200,
           height: 630,
           alt: 'FeedCentral - Your News, Centralized',
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: 'summary_large_image',
       title: t('title'),
       description: t('description'),
-      images: ['https://feed.benzoogataga.com/og-image.png'],
+      images: ['https://kidd.one/og-image.png'],
     },
     robots: {
       index: true,

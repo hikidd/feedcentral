@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/admin/', '/app/settings/'],
       },
     ],
-    sitemap: 'https://feed.benzoogataga.com/sitemap.xml',
+    sitemap: 'https://kidd.one/sitemap.xml',
   };
 }

@@ -1,99 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { fetchAndStoreUserArticles } from '@/lib/rss-parser';
+import { fetchEnabledUserSources } from '@/lib/cron/fetch-user-sources';
 import { getCronApiKey } from '@/lib/env';
 import { getValidatedConcurrency, getRuntimeConfig } from '@/lib/rss-config';
 
+function isAuthorized(request: NextRequest): boolean {
+  const authHeader = request.headers.get('authorization');
+  const cronApiKey = getCronApiKey();
+  const cronSecret = process.env.CRON_SECRET;
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isVercelCron = !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isAuthorizedWithApiKey = !!cronApiKey && authHeader === `Bearer ${cronApiKey}`;
+
+  return isDevelopment || isVercelCron || isAuthorizedWithApiKey;
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  if (!error) {
+    return undefined;
+  }
+
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
- * Cron endpoint for fetching user-specific RSS feeds
- * Fetches articles from custom user-added sources (UserSource model)
- * 
- * Security: Requires CRON_API_KEY header or Vercel cron secret
- * 
- * Query params:
- * - concurrency: Number of feeds to fetch in parallel (default: 5, max: 10)
- * - userId: Fetch sources for a specific user only (optional)
+ * Cron endpoint for fetching user-specific RSS feeds.
+ * Fetches articles from custom user-added sources (UserSource model).
  */
 export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
-    // Verify cron authorization
-    const authHeader = request.headers.get('authorization');
-    const cronApiKey = getCronApiKey();
-    const isDevelopment = process.env.NODE_ENV === 'development';
-
-    // Vercel Cron sends a secret in Authorization header
-    const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    const isAuthorized = cronApiKey && authHeader === `Bearer ${cronApiKey}`;
-
-    // Allow unauthenticated access in development for convenience
-    if (!isDevelopment && !isVercelCron && !isAuthorized) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     console.log('[USER CRON] Starting user sources fetch...');
     const startTime = Date.now();
 
-    // Parse query parameters with validation
     const searchParams = request.nextUrl.searchParams;
     const config = getRuntimeConfig();
     const requestedConcurrency = searchParams.get('concurrency');
-    const concurrency = requestedConcurrency 
+    const concurrency = requestedConcurrency
       ? getValidatedConcurrency(parseInt(requestedConcurrency, 10))
       : config.DEFAULT_CONCURRENCY;
     const userId = searchParams.get('userId') || undefined;
-
-    // Fetch enabled user sources
-    const userSources = await prisma.userSource.findMany({
-      where: {
-        isEnabled: true,
-        ...(userId && { userId }),
-      },
-      include: { 
-        user: {
-          select: { email: true },
-        },
-      },
+    const { sourceCount, results } = await fetchEnabledUserSources({
+      concurrency,
+      userId,
     });
 
-    console.log(`[USER CRON] Fetching ${userSources.length} user sources with concurrency ${concurrency}`);
-
-    // Process in batches to control concurrency
-    const results: Array<{
-      source: string;
-      userId: string;
-      status: 'fulfilled' | 'rejected';
-      data?: { found: number; added: number; error?: string };
-      error?: any;
-    }> = [];
-
-    for (let i = 0; i < userSources.length; i += concurrency) {
-      const batch = userSources.slice(i, i + concurrency);
-      const batchResults = await Promise.allSettled(
-        batch.map((source) => fetchAndStoreUserArticles(source))
-      );
-
-      results.push(
-        ...batchResults.map((result, index) => ({
-          source: batch[index].customName || batch[index].feedUrl,
-          userId: batch[index].userId,
-          status: result.status,
-          data: result.status === 'fulfilled' ? result.value : undefined,
-          error: result.status === 'rejected' ? result.reason : undefined,
-        }))
-      );
-
-      // Log progress
-      console.log(`[USER CRON] Completed batch ${Math.floor(i / concurrency) + 1}/${Math.ceil(userSources.length / concurrency)}`);
-    }
-
     const duration = Date.now() - startTime;
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
-    const totalAdded = results.reduce((sum, r) => sum + (r.data?.added || 0), 0);
-    const totalFound = results.reduce((sum, r) => sum + (r.data?.found || 0), 0);
+    const successful = results.filter(
+      (result) => result.status === 'fulfilled' && !result.data?.error
+    ).length;
+    const failed = results.length - successful;
+    const totalAdded = results.reduce((sum, result) => sum + (result.data?.added || 0), 0);
+    const totalFound = results.reduce((sum, result) => sum + (result.data?.found || 0), 0);
 
     const summary = {
       success: true,
@@ -104,7 +67,7 @@ export async function GET(request: NextRequest) {
       type: 'user_sources',
       userId: userId || 'all',
       sources: {
-        total: results.length,
+        total: sourceCount,
         successful,
         failed,
       },
@@ -113,13 +76,13 @@ export async function GET(request: NextRequest) {
         added: totalAdded,
         duplicates: totalFound - totalAdded,
       },
-      results: results.map(r => ({
-        source: r.source,
-        userId: r.userId,
-        status: r.status,
-        articlesFound: r.data?.found || 0,
-        articlesAdded: r.data?.added || 0,
-        error: r.error?.message || r.data?.error,
+      results: results.map((result) => ({
+        source: result.source,
+        userId: result.userId,
+        status: result.status,
+        articlesFound: result.data?.found || 0,
+        articlesAdded: result.data?.added || 0,
+        error: getErrorMessage(result.error) || result.data?.error,
       })),
     };
 
@@ -130,12 +93,13 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(summary);
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[USER CRON] Error fetching user sources:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: message,
         timestamp: new Date().toISOString(),
       },
       { status: 500 }
@@ -144,7 +108,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Allow manual triggering via POST (for testing/admin)
+ * Allow manual triggering via POST (for testing/admin).
  */
 export async function POST(request: NextRequest) {
   return GET(request);

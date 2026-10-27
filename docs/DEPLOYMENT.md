@@ -21,7 +21,7 @@ Based on your current setup, ensure these are configured:
 - `ADMIN_PASSWORD_HASH` - bcrypt hash of admin password
 
 ### CORS & Site Configuration
-- `CORS_ORIGIN` - Your production domain (e.g., https://feedcentral.vercel.app)
+- `CORS_ORIGIN` - Your production domain (e.g., https://kidd.one)
 - `NEXT_PUBLIC_SITE_URL` - Public site URL
 
 ### Cron Job Security
@@ -55,13 +55,13 @@ ADMIN_USERNAME=admin@feedcentral.local
 ADMIN_PASSWORD_HASH=<bcrypt-hash-of-password>
 
 # CORS (recommended)
-CORS_ORIGIN=https://feedcentral.vercel.app
+CORS_ORIGIN=https://kidd.one
 
 # Cron security (recommended)
 CRON_API_KEY=<random-secret-key>
 
 # Site URL (optional, auto-detected)
-NEXT_PUBLIC_SITE_URL=https://feedcentral.vercel.app
+NEXT_PUBLIC_SITE_URL=https://kidd.one
 ```
 
 **Note:** `POSTGRES_URL` and `PRISMA_DATABASE_URL` are automatically provided by Vercel Postgres.
@@ -92,26 +92,31 @@ npm run db:seed
 
 Or create a one-time deployment script in Vercel dashboard.
 
-### 6. Enable Vercel Cron
+### 6. Deploy the unified Cloudflare scheduler
 
-Cron jobs are defined in `vercel.json`:
+Automatic jobs are handled by the standalone Worker in `cloudflare/scheduler/`.
+It makes one hourly daytime request to:
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/fetch-feeds",
-      "schedule": "*/30 * * * *"
-    }
-  ]
-}
+```text
+POST https://kidd.one/api/cron/run-all
 ```
 
-Vercel automatically schedules this on deployment.
+The endpoint fetches global and user sources and runs weekly cleanup from the
+application on the first Monday invocation of the UTC week. Deploy it with:
 
-**Verify cron is working:**
-- Check Vercel Dashboard → Deployments → Functions → Cron Logs
-- Manually trigger: `POST https://your-domain.vercel.app/api/cron/fetch-feeds` with `Authorization: Bearer <CRON_API_KEY>`
+```bash
+cd cloudflare/scheduler
+npm install
+npx wrangler secret put CRON_API_KEY
+npm run deploy
+```
+
+Do not add Vercel Cron entries or a second VM crontab. Manually verify with:
+
+```bash
+curl -X POST https://kidd.one/api/cron/run-all \
+  -H "Authorization: Bearer <CRON_API_KEY>"
+```
 
 ### 7. Post-Deployment Verification
 
@@ -122,11 +127,11 @@ Vercel automatically schedules this on deployment.
    - Login with admin credentials
 
 3. **Verify RSS fetching:**
-   - Check cron logs in Vercel dashboard
-   - Manually trigger: `curl -X POST https://your-domain.vercel.app/api/cron/fetch-feeds -H "Authorization: Bearer YOUR_CRON_API_KEY"`
+   - Check Cloudflare Worker and application logs
+   - Manually trigger: `curl -X POST https://kidd.one/api/cron/run-all -H "Authorization: Bearer YOUR_CRON_API_KEY"`
 
 4. **Monitor errors:**
-   - Vercel Dashboard → Logs → Real-time logs
+   - Check the Cloudflare Worker logs and Vercel application logs
 
 ## Continuous Deployment
 
@@ -135,7 +140,7 @@ Every push to `main` branch triggers:
 2. Generate Prisma client
 3. Build Next.js app
 4. Deploy to Vercel
-5. Cron jobs are automatically scheduled
+5. Deploy the Cloudflare Worker separately; it is the only automatic scheduler
 
 ## Troubleshooting
 
@@ -144,9 +149,10 @@ Every push to `main` branch triggers:
 - Check `vercel.json` build command includes `prisma generate`
 
 ### Cron Jobs Not Running
-- Verify `vercel.json` cron configuration
-- Check Vercel Dashboard → Cron Jobs status
-- Ensure cron endpoint is not rate-limited
+- Verify the Cloudflare Worker is deployed and `/health` reports one `run-all` job
+- Check Cloudflare Worker logs and application logs
+- Confirm no legacy VM crontab or Vercel Cron job is also enabled
+- Ensure the cron endpoint is not rate-limited
 
 ### Database Connection Issues
 - Verify Vercel Postgres is provisioned

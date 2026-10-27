@@ -398,7 +398,7 @@ export default function LandingPage() {
                   </li>
                   <li>
                     <a 
-                      href="https://feed.benzoogataga.com" 
+                      href="https://kidd.one"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-muted-foreground transition-colors hover:text-foreground"

@@ -254,12 +254,12 @@ export default function SourcesPage() {
               These are the <strong className="text-foreground">official RSS feed sources</strong> for 
               the FeedCentral instance at{' '}
               <a 
-                href="https://feed.benzoogataga.com" 
+                href="https://kidd.one"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                feed.benzoogataga.com
+                kidd.one
               </a>
               . Third-party forks may use different sources.
             </p>

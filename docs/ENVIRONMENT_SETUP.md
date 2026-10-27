@@ -176,14 +176,22 @@ npm run db:seed
 
 Alternatively, you can run these in Vercel's terminal (if available in your plan).
 
-### 6. Configure Cron Jobs (Automated RSS Fetching)
+### 6. Configure the unified scheduler (Automated RSS Fetching)
 
-The `vercel.json` file already configures a cron job. Vercel will automatically:
-- Trigger `/api/cron/fetch-feeds` every 30 minutes
-- Use Vercel's built-in cron authentication
+Deploy the Cloudflare Worker in `cloudflare/scheduler/`. It makes one scheduled
+request to `/api/cron/run-all`, which fetches global and user sources and runs
+weekly cleanup in the application.
 
-**Optional: Add Extra Security**
-If you set `CRON_API_KEY` in environment variables, the endpoint will require it.
+Set these production values:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://kidd.one
+CORS_ORIGIN=https://kidd.one
+CRON_API_KEY=<same-secret-used-by-the-Worker>
+```
+
+The Worker stores `CRON_API_KEY` as a secret and sends it in the Authorization
+header. Do not configure an additional Vercel Cron or VM cron job.
 
 ---
 

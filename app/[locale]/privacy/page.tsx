@@ -54,19 +54,19 @@ export default function PrivacyPage() {
                 <Scale className="h-4 w-4 shrink-0" />
                 <span>
                   <strong>{t('privacy.applicableTo')}</strong> {t('privacy.applicableDescription', { 
-                    url: 'feed.benzoogataga.com' 
-                  }).split('feed.benzoogataga.com')[0]}
+                    url: 'kidd.one'
+                  }).split('kidd.one')[0]}
                   <a 
-                    href="https://feed.benzoogataga.com" 
+                    href="https://kidd.one"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
-                    feed.benzoogataga.com
+                    kidd.one
                   </a>
                   {t('privacy.applicableDescription', { 
-                    url: 'feed.benzoogataga.com' 
-                  }).split('feed.benzoogataga.com')[1]}
+                    url: 'kidd.one'
+                  }).split('kidd.one')[1]}
                 </span>
               </p>
             </div>
@@ -175,12 +175,12 @@ export default function PrivacyPage() {
                 and protects your personal information when you use our RSS feed aggregation service 
                 at{' '}
                 <a 
-                  href="https://feed.benzoogataga.com" 
+                  href="https://kidd.one"
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  feed.benzoogataga.com
+                  kidd.one
                 </a>
                 .
               </p>
@@ -812,12 +812,12 @@ export default function PrivacyPage() {
                     who operates it and review their privacy policy. The <strong>official FeedCentral instance</strong> is 
                     hosted at{' '}
                     <a 
-                      href="https://feed.benzoogataga.com" 
+                      href="https://kidd.one"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-primary hover:underline font-semibold"
                     >
-                      feed.benzoogataga.com
+                      kidd.one
                     </a>
                     . Third-party instances may have different privacy practices, data handling, and security measures.
                   </span>
@@ -830,12 +830,12 @@ export default function PrivacyPage() {
                 <li>
                   <strong className="text-foreground">Official Domain:</strong>{' '}
                   <a 
-                    href="https://feed.benzoogataga.com" 
+                    href="https://kidd.one"
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    feed.benzoogataga.com
+                    kidd.one
                   </a>
                 </li>
                 <li>

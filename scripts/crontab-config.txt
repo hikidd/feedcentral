@@ -1,30 +1,11 @@
-# FeedCentral - Cron Jobs Configuration
-# Copy these lines to your crontab: crontab -e
-
-# Fetch RSS feeds every 30 minutes
-*/30 * * * * /root/scripts/fetch-feeds.sh
-
-# Cleanup old articles daily at 2 AM (prevents database saturation)
-0 2 * * * /root/scripts/cleanup-articles.sh
-
-# ==============================================================================
-# SETUP INSTRUCTIONS
-# ==============================================================================
-# 1. Upload scripts to server:
-#    scp scripts/fetch-feeds.sh root@your-server:/root/scripts/
-#    scp scripts/cleanup-articles.sh root@your-server:/root/scripts/
+# FeedCentral unified fallback cron configuration
 #
-# 2. Make them executable:
-#    chmod +x /root/scripts/fetch-feeds.sh
-#    chmod +x /root/scripts/cleanup-articles.sh
-#
-# 3. Edit crontab and add the two lines above:
-#    crontab -e
-#
-# 4. Verify cron jobs:
-#    crontab -l
-#
-# 5. Monitor logs:
-#    tail -f /var/log/feedcentral-fetch.log
-#    tail -f /var/log/feedcentral-cleanup.log
+# Production should use the Cloudflare Worker in cloudflare/scheduler instead.
+# If a VM fallback is required, configure this single entry only and make sure
+# the server cron timezone is UTC.
 
+0 * * * * /root/scripts/cron-runner.sh
+
+# The unified endpoint fetches global and user sources. It also runs the weekly
+# article cleanup on the first Monday run of the UTC week.
+# Do not add separate fetch, user-source, or cleanup cron entries.

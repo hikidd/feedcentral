@@ -13,7 +13,7 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [settings, setSettings] = useState({
     siteName: 'FeedCentral',
-    siteUrl: 'http://localhost:3000',
+    siteUrl: 'https://kidd.one',
     defaultFetchInterval: 30,
     maxArticlesPerFeed: 100,
     enableNotifications: true,
@@ -134,7 +134,7 @@ export default function SettingsPage() {
                         type="url"
                         value={settings.siteUrl}
                         onChange={(e) => setSettings({ ...settings, siteUrl: e.target.value })}
-                        placeholder="https://feedcentral.example.com"
+                        placeholder="https://kidd.one"
                       />
                       <p className="mt-1 text-xs text-muted-foreground">
                         {t('admin.settingsPage.general.siteUrlDescription')}

@@ -141,16 +141,19 @@ npx prisma db seed
 
 ## Cron Job Setup
 
-### Configure Automatic Feed Fetching
-- [ ] `vercel.json` cron configuration present (should be in repo)
-- [ ] Cron job appears in Vercel dashboard (Settings → Cron Jobs)
-- [ ] Cron schedule verified: `0 */30 * * *` (every 30 minutes)
-- [ ] First cron execution successful (check deployment logs)
-- [ ] New articles appear after cron runs
+### Configure the unified Cloudflare scheduler
+- [ ] Cloudflare Worker is deployed from `cloudflare/scheduler/`
+- [ ] Worker secret `CRON_API_KEY` matches the application environment
+- [ ] Worker `/health` reports exactly one `run-all` job
+- [ ] Base URL is `https://kidd.one`
+- [ ] First unified cron execution succeeds
+- [ ] New global and user articles appear after a run
+- [ ] Weekly cleanup is observed on the first Monday UTC run
+- [ ] Legacy VM crontab and Vercel Cron jobs are disabled
 
 **Manual Cron Trigger (for testing):**
 ```bash
-curl -X POST https://your-app.vercel.app/api/cron/fetch-feeds \
+curl -X POST https://kidd.one/api/cron/run-all \
   -H "Authorization: Bearer YOUR_CRON_API_KEY"
 ```
 
@@ -250,8 +253,8 @@ vercel env pull
 npx prisma db push
 npx prisma db seed
 
-# Manual cron trigger
-curl -X POST https://your-app.vercel.app/api/cron/fetch-feeds \
+# Manual unified cron trigger
+curl -X POST https://kidd.one/api/cron/run-all \
   -H "Authorization: Bearer YOUR_CRON_API_KEY"
 ```
 
