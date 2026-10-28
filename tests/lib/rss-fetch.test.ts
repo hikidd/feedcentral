@@ -381,3 +381,41 @@ describe('RSS fetch protocol negotiation', () => {
     expect(mockTlsConnect).not.toHaveBeenCalled();
   });
 });
+
+describe('RSS fetch retry', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    mockLookup.mockReset();
+    mockHttpRequest.mockReset();
+    mockHttpsRequest.mockReset();
+    mockHttp2Connect.mockReset();
+    mockTlsConnect.mockReset();
+    mockLookup.mockResolvedValue([{ address: '8.8.8.8', family: 4 }]);
+    mockAlpn(false);
+  });
+
+  it('retries once when the first attempt times out', async () => {
+    mockHttpsRequest.mockImplementationOnce(() => {
+      const request = createMockRequest(() => {
+        setImmediate(() => request.emit('timeout'));
+      });
+      return request;
+    });
+    mockHttp1Response(200, '<rss>retried</rss>');
+
+    const { fetchRssXml } = require('@/lib/rss-fetch');
+
+    // The retry waits RETRY_DELAY_MS before trying again.
+    await expect(fetchRssXml('https://slow.example/feed.xml')).resolves.toBe('<rss>retried</rss>');
+    expect(mockHttpsRequest).toHaveBeenCalledTimes(2);
+  }, 10000);
+
+  it('does not retry when the site refuses the request', async () => {
+    mockHttp1Response(403, '');
+
+    const { fetchRssXml } = require('@/lib/rss-fetch');
+
+    await expect(fetchRssXml('https://blocked.example/feed.xml')).rejects.toThrow('HTTP 403');
+    expect(mockHttpsRequest).toHaveBeenCalledTimes(1);
+  });
+});

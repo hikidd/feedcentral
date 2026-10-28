@@ -20,9 +20,10 @@ export const RSS_CONFIG = {
   /**
    * Feed fetch timeout in milliseconds
    * Prevents hanging on slow/dead feeds. Several Chinese sites take 5-10s to
-   * send their first byte, so 10s was too tight and failed them every run.
+   * send their first byte, and RSSHub has to build a feed before it can answer,
+   * so 10s was too tight and failed them every run.
    */
-  FEED_TIMEOUT: 20000, // 20 seconds
+  FEED_TIMEOUT: 30000, // 30 seconds
 
   /**
    * Timeout for the TLS ALPN probe that decides HTTP/2 vs HTTP/1.1.

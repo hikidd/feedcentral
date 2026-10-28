@@ -9,6 +9,7 @@ import { getAllowedFeedCidrs } from '@/lib/env';
 
 const MAX_RSS_REDIRECTS = 3;
 const MAX_RSS_RESPONSE_BYTES = 5 * 1024 * 1024;
+const RETRY_DELAY_MS = 2000;
 
 const blockedNetworks = new net.BlockList();
 
@@ -48,7 +49,27 @@ interface ResolvedAddress {
 }
 
 export async function fetchRssXml(feedUrl: string): Promise<string> {
-  return fetchRssXmlWithRedirects(new URL(feedUrl), 0);
+  const url = new URL(feedUrl);
+
+  try {
+    return await fetchRssXmlWithRedirects(url, 0);
+  } catch (error) {
+    if (!isTimeoutError(error)) {
+      throw error;
+    }
+
+    // A timed-out request often leaves the upstream cache warm: feed proxies
+    // such as RSSHub keep building the feed after the client disconnects, so a
+    // single retry usually comes back right away.
+    console.warn(`RSS feed timed out, retrying once: ${feedUrl}`);
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+
+    return fetchRssXmlWithRedirects(url, 0);
+  }
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes('timed out after');
 }
 
 export async function ensureUrlAllowed(feedUrl: string): Promise<void> {
