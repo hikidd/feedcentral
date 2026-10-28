@@ -1,4 +1,4 @@
-name = "kidd-cc-cd"
+name = "www-kidd-one"
 main = "src/index.ts"
 compatibility_date = "2026-04-25"
 
@@ -7,6 +7,9 @@ APP_BASE_URL = "https://kidd.one"
 RUN_ALL_PATH = "/api/cron/run-all"
 RUN_ALL_QUERY = ""
 
+# The Worker runs the job for any trigger, so this schedule is free to change in
+# the Cloudflare dashboard. Keep it in sync here so a redeploy does not revert it.
+# UTC 00:00-15:00 = Beijing 08:00-23:00, hourly.
 [triggers]
 crons = [
   "0 0-15 * * *"

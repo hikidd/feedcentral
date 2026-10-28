@@ -20,7 +20,9 @@ Authorization: Bearer YOUR_CRON_API_KEY
 
 ## Recommended production scheduler: Cloudflare Worker
 
-The Worker configuration is in `cloudflare/scheduler/` and has one schedule:
+The Worker configuration is in `cloudflare/scheduler/`. The Worker runs its job
+for any cron trigger, so the schedule can be changed in the Cloudflare dashboard
+without redeploying. Production uses:
 
 ```text
 0 0-15 * * *

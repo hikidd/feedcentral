@@ -5,15 +5,6 @@ interface Env {
   RUN_ALL_QUERY?: string;
 }
 
-// UTC 00:00-15:00 = Beijing 08:00-23:00, hourly.
-const RUN_ALL_CRON = '0 0-15 * * *';
-
-type JobConfig = {
-  name: string;
-  path: string;
-  query?: string;
-};
-
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -24,7 +15,6 @@ export default {
         baseUrl: env.APP_BASE_URL,
         jobs: {
           runAll: {
-            cron: RUN_ALL_CRON,
             path: env.RUN_ALL_PATH,
             query: env.RUN_ALL_QUERY || '',
           },
@@ -36,33 +26,27 @@ export default {
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    const job = getJobForCron(controller.cron, env);
+    // The schedule lives in Cloudflare (dashboard or wrangler.toml), not here.
+    // Matching on an exact cron expression meant that editing the schedule in
+    // the dashboard silently turned the Worker into a no-op, so run the job for
+    // whatever trigger fires.
+    console.log(`Cron fired: ${controller.cron} at ${new Date(controller.scheduledTime).toISOString()}`);
 
-    if (!job) {
-      console.warn(`No job configured for cron: ${controller.cron}`);
-      return;
-    }
-
-    ctx.waitUntil(runJob(job, env));
+    ctx.waitUntil(runJob(env));
   },
 };
 
-function getJobForCron(cron: string, env: Env): JobConfig | null {
-  if (cron !== RUN_ALL_CRON) {
-    return null;
+async function runJob(env: Env): Promise<void> {
+  if (!env.CRON_API_KEY) {
+    // Fail loudly: without the key the app answers 401 and the run is wasted.
+    console.error('CRON_API_KEY is not configured; refusing to call the app');
+    throw new Error('CRON_API_KEY is not configured');
   }
 
-  return {
-    name: 'run-all',
-    path: env.RUN_ALL_PATH,
-    query: env.RUN_ALL_QUERY,
-  };
-}
+  const url = buildUrl(env.APP_BASE_URL, env.RUN_ALL_PATH, env.RUN_ALL_QUERY);
+  const name = 'run-all';
 
-async function runJob(job: JobConfig, env: Env): Promise<void> {
-  const url = buildUrl(env.APP_BASE_URL, job.path, job.query);
-
-  console.log(`Running ${job.name}: ${url}`);
+  console.log(`Running ${name}: ${url}`);
 
   const response = await fetch(url, {
     method: 'POST',
@@ -74,11 +58,11 @@ async function runJob(job: JobConfig, env: Env): Promise<void> {
   const body = await response.text();
 
   if (!response.ok) {
-    console.error(`Job ${job.name} failed with ${response.status}: ${body}`);
-    throw new Error(`Job ${job.name} failed with status ${response.status}`);
+    console.error(`Job ${name} failed with ${response.status}: ${body}`);
+    throw new Error(`Job ${name} failed with status ${response.status}`);
   }
 
-  console.log(`Job ${job.name} completed with ${response.status}: ${body}`);
+  console.log(`Job ${name} completed with ${response.status}: ${body}`);
 }
 
 function buildUrl(baseUrl: string, path: string, query?: string): string {

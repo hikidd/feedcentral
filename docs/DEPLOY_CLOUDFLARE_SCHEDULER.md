@@ -42,6 +42,10 @@ The `CRON_API_KEY` is stored as a Worker secret and must match the application e
 
 Cloudflare cron expressions are configured in UTC.
 
+The Worker runs `/api/cron/run-all` for whatever cron trigger fires, so the
+schedule is not hardcoded in the Worker: change it in the dashboard or in
+`wrangler.toml` and it takes effect without a code change.
+
 Current schedule:
 
 - `0 0-15 * * *`
