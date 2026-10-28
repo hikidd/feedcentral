@@ -19,9 +19,17 @@ export const RSS_CONFIG = {
 
   /**
    * Feed fetch timeout in milliseconds
-   * Prevents hanging on slow/dead feeds
+   * Prevents hanging on slow/dead feeds. Several Chinese sites take 5-10s to
+   * send their first byte, so 10s was too tight and failed them every run.
    */
-  FEED_TIMEOUT: 10000, // 10 seconds
+  FEED_TIMEOUT: 20000, // 20 seconds
+
+  /**
+   * Timeout for the TLS ALPN probe that decides HTTP/2 vs HTTP/1.1.
+   * Kept short so a host that stalls during the handshake falls back to
+   * HTTP/1.1 quickly instead of eating the whole feed budget.
+   */
+  ALPN_PROBE_TIMEOUT: 5000, // 5 seconds
 
   /**
    * User agent for RSS requests

@@ -148,7 +148,7 @@ async function supportsHttp2(hostname: string): Promise<boolean> {
       port: 443,
       servername: net.isIP(hostname) ? undefined : hostname,
       ALPNProtocols: ['h2', 'http/1.1'],
-      timeout: RSS_CONFIG.FEED_TIMEOUT,
+      timeout: RSS_CONFIG.ALPN_PROBE_TIMEOUT,
     });
 
     socket.once('secureConnect', () => finish(socket.alpnProtocol === 'h2'));
